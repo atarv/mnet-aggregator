@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, RecordWildCards #-}
 
 import           Text.HTML.Scalpel
 import           Control.Applicative
@@ -24,29 +24,22 @@ announcements = chroots ("table" @: ["cellpadding" @= "2"]) announcementScraper
 
 announcementScraper :: Scraper String Announcement
 announcementScraper = do
-    (t, l) <-
+    (title, announcementId) <-
         chroot ("td" @: [hasClass "tori_title"] // "a")
         $   (,)
         <$> (text $ tagSelector "a")
         <*> (attr "href" $ tagSelector "a")
-    desc           <- text $ "font" @: [hasClass "msg"]
-    (auth, authId) <-
+    description        <- text $ "font" @: [hasClass "msg"]
+    (author, authorId) <-
         chroot ("a" @: ["href" @=~ (re "/jasenet.*")])
         $   (,)
         <$> (text "a")
         <*> (attr "href" $ "a")
-    p    <- innerHTMLs $ "p" -- FIXME: Price doesn't get scraped properly
-    pics <- attrs "src" $ "img" @: [hasClass "border"]
-    dat  <- text $ "small" @: [hasClass "light"]
-    return $ Announcement { title          = t
-                          , announcementId = baseUrl <> l
-                          , description    = desc
-                          , author         = auth
-                          , authorId       = authId
-                          , price          = concat p
-                          , thumbnails     = pics
-                          , dates          = dat
-                          }
+    -- FIXME: Price doesn't get scraped properly
+    price      <- (innerHTMLs $ "p") >>= return . concat
+    thumbnails <- attrs "src" $ "img" @: [hasClass "border"]
+    dates      <- text $ "small" @: [hasClass "light"]
+    return $ Announcement { .. }
 
 scrapeAnnouncements :: URL -> IO (Maybe [Announcement])
 scrapeAnnouncements url = scrapeURL url announcements
