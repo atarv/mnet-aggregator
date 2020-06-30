@@ -1,10 +1,12 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 module MnetWatcher (runApp) where
 
 import           Announcement
 import           AnnouncementScraper
 import           Configs                        ( baseUrl )
 import           Control.Applicative
+import           Control.Exception
+import           HTMLRenderer
 import           Text.HTML.Scalpel
 import qualified Data.Set                      as Set
 import qualified Data.Text                     as T
@@ -19,8 +21,9 @@ saveSeenAnnouncementIds =
     T.appendFile announcementFile . T.unlines . map announcementId
 
 loadSeenAnnouncementIds :: IO (Set.Set T.Text)
-loadSeenAnnouncementIds =
-    Set.fromList . T.lines <$> T.readFile announcementFile
+loadSeenAnnouncementIds = catch
+    (Set.fromList . T.lines <$> T.readFile announcementFile)
+    (\(_ :: IOException) -> return Set.empty)
 
 filterSeenAnnouncements :: Set.Set T.Text -> [Announcement] -> [Announcement]
 filterSeenAnnouncements seen =
@@ -35,5 +38,6 @@ runApp = do
             seen <- loadSeenAnnouncementIds
             let newAnnouncements = filterSeenAnnouncements seen anns
             mapM_ print newAnnouncements
+            writeFile "out.html" $ announcementsToHtml newAnnouncements
             saveSeenAnnouncementIds newAnnouncements
         Nothing -> error "Error: failed to scrape"
