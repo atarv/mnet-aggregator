@@ -3,7 +3,7 @@ module MnetWatcher (runApp) where
 
 import           Announcement
 import           AnnouncementScraper
-import           Configs                        ( baseUrl )
+import           Configs
 import           Control.Applicative
 import           Control.Exception
 import           Data.Time
@@ -34,17 +34,24 @@ filterSeenAnnouncements seen =
 
 runApp :: IO ()
 runApp = do
-    res <- scrapeAnnouncements
-        (baseUrl <> "/tori/?type=sell&province=Keski-Suomi&category=20")
+    conf <- loadConfig Nothing
+    -- TODO: Scrape multiple URLs at a time and send them combined as email
+    -- User could also have section titles for each URL that would show up in 
+    -- in mail
+    res <- scrapeAnnouncements (T.unpack $ head $ scrapeUrls conf)
     case res of
-        Just []   -> putStrLn "No new announcements"
+        Just []   -> putStrLn "No announcements scraped"
         Just anns -> do
             seen <- loadAnnouncementIds
             let newAnnouncements = filterSeenAnnouncements seen anns
-            time <-
-                formatTime defaultTimeLocale "%-d.%-m.%Y %-R" <$> getCurrentTime
-            let title    = "Uusia ilmoituksia " <> time
-            let annsHtml = announcementsToHtml title newAnnouncements
-            sendAnnouncementMail (LT.pack annsHtml)
-            saveAnnouncementIds newAnnouncements
+            if null newAnnouncements
+                then putStrLn "No new announcements"
+                else do
+                    time <-
+                        formatTime defaultTimeLocale "%-d.%-m.%Y %-R"
+                            <$> getCurrentTime
+                    let title    = "Uusia ilmoituksia " <> time
+                    let annsHtml = announcementsToHtml title newAnnouncements
+                    sendAnnouncementMail conf (LT.pack annsHtml)
+                    saveAnnouncementIds newAnnouncements
         Nothing -> error "Error: failed to scrape"

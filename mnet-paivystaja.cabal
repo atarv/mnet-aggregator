@@ -42,6 +42,7 @@ library
       , blaze-html
       , clay
       , containers
+      , dhall
       , mime-mail
       , regex-tdfa
       , scalpel
