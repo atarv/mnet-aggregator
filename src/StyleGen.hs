@@ -4,13 +4,14 @@ import           Prelude                 hiding ( div
                                                 , span
                                                 )
 import           Clay
+import qualified Data.Text                     as T
+import qualified Data.Text.Lazy                as LT
 
+styleSheet :: LT.Text
 styleSheet = render mnetStyle
 
-linkColor :: Color
-linkColor = black
-
-headerFonts = ["Inconsolata"]
+headerFonts :: [T.Text]
+headerFonts = ["Inconsolata", "Consolas"]
 
 mnetStyle :: Css
 mnetStyle = do
@@ -29,11 +30,12 @@ mnetStyle = do
         float floatRight
         border ridge (px 2) black
         margin 0 0 (em 1) (em 1)
-    a # visited ? color linkColor
+        maxWidth (pct 40)
     div # byClass "announcement" ? do
         "clear" -: "both"
         height (pct 100)
         overflow hidden
         paddingLeft (em 1)
+        maxWidth (em 50)
     span ? do
         "clear" -: "both"

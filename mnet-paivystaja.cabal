@@ -33,6 +33,7 @@ library
       AnnouncementScraper
       Configs
       HTMLRenderer
+      Mailer
       StyleGen
   hs-source-dirs:
       src
@@ -41,8 +42,10 @@ library
       , blaze-html
       , clay
       , containers
+      , mime-mail
       , regex-tdfa
       , scalpel
+      , smtp-mail
       , text
       , time
   default-language: Haskell2010

@@ -8,9 +8,11 @@ import           Control.Applicative
 import           Control.Exception
 import           Data.Time
 import           HTMLRenderer
+import           Mailer
 import           Text.HTML.Scalpel
 import qualified Data.Set                      as Set
 import qualified Data.Text                     as T
+import qualified Data.Text.Lazy                as LT
 import qualified Data.Text.IO                  as T
 import qualified Text.Regex.TDFA               as RegexTDFA
 
@@ -41,7 +43,8 @@ runApp = do
             let newAnnouncements = filterSeenAnnouncements seen anns
             time <-
                 formatTime defaultTimeLocale "%-d.%-m.%Y %-R" <$> getCurrentTime
-            let title = "Uusia ilmoituksia " <> time
-            writeFile "out.html" $ announcementsToHtml title newAnnouncements
+            let title    = "Uusia ilmoituksia " <> time
+            let annsHtml = announcementsToHtml title newAnnouncements
+            sendAnnouncementMail (LT.pack annsHtml)
             saveAnnouncementIds newAnnouncements
         Nothing -> error "Error: failed to scrape"
