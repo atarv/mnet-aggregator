@@ -26,7 +26,7 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      MnetWatcher
   other-modules:
       Paths_mnet_paivystaja
   hs-source-dirs:
@@ -35,6 +35,7 @@ library
       base >=4.7 && <5
       , scalpel
       , text
+      , regex-tdfa
   default-language: Haskell2010
 
 executable mnet-paivystaja-exe
@@ -47,9 +48,6 @@ executable mnet-paivystaja-exe
   build-depends:
       base >=4.7 && <5
     , mnet-paivystaja
-    , scalpel
-    , regex-tdfa
-    , text
   default-language: Haskell2010
 
 test-suite mnet-paivystaja-test
