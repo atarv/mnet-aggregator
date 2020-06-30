@@ -16,13 +16,11 @@ announcementScraper = do
         $   (,)
         <$> text (tagSelector "a")
         <*> attr "href" (tagSelector "a")
-    description        <- text $ "font" @: [hasClass "msg"]
+    description        <- text $ "td" @: ["colspan" @= "2", "valign" @= "top"]
     (author, authorId) <-
         chroot ("a" @: ["href" @=~ re "/jasenet.*"]) $ (,) <$> text "a" <*> attr
             "href"
             "a"
-    -- FIXME: Price doesn't get scraped properly
-    price      <- T.concat <$> innerHTMLs "p"
     thumbnails <- attrs "src" $ "img" @: [hasClass "border"]
     dates      <- text $ "small" @: [hasClass "light"]
     return $ Announcement { .. }
