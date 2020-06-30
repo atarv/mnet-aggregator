@@ -16,7 +16,7 @@ announcementScraper = do
         $   (,)
         <$> text (tagSelector "a")
         <*> attr "href" (tagSelector "a")
-    description        <- text $ "td" @: ["colspan" @= "2", "valign" @= "top"]
+    description        <- html $ "td" @: ["colspan" @= "2", "valign" @= "top"]
     (author, authorId) <-
         chroot ("a" @: ["href" @=~ re "/jasenet.*"]) $ (,) <$> text "a" <*> attr
             "href"

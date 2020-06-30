@@ -6,6 +6,7 @@ import           AnnouncementScraper
 import           Configs                        ( baseUrl )
 import           Control.Applicative
 import           Control.Exception
+import           Data.Time
 import           HTMLRenderer
 import           Text.HTML.Scalpel
 import qualified Data.Set                      as Set
@@ -33,11 +34,12 @@ runApp :: IO ()
 runApp = do
     res <- scrapeAnnouncements
         (baseUrl <> "/tori/?type=sell&province=Keski-Suomi&category=20")
+    time <- formatTime defaultTimeLocale "%-d.%-m.%Y %-R" <$> getCurrentTime
+    let title = "Uusia ilmoituksia " <> time
     case res of
         Just anns -> do
             seen <- loadSeenAnnouncementIds
             let newAnnouncements = filterSeenAnnouncements seen anns
-            mapM_ print newAnnouncements
-            writeFile "out.html" $ announcementsToHtml newAnnouncements
+            writeFile "out.html" $ announcementsToHtml title newAnnouncements
             saveSeenAnnouncementIds newAnnouncements
         Nothing -> error "Error: failed to scrape"

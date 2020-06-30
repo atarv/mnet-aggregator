@@ -33,15 +33,18 @@ library
       AnnouncementScraper
       Configs
       HTMLRenderer
+      StyleGen
   hs-source-dirs:
       src
   build-depends:
       base >=4.7 && <5
+      , blaze-html
+      , clay
+      , containers
+      , regex-tdfa
       , scalpel
       , text
-      , regex-tdfa
-      , containers
-      , blaze-html
+      , time
   default-language: Haskell2010
 
 executable mnet-paivystaja-exe
