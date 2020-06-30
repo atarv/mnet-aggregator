@@ -1,55 +1,39 @@
-{-# LANGUAGE OverloadedStrings, RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings #-}
 module MnetWatcher (runApp) where
 
-import           Text.HTML.Scalpel
+import           Announcement
+import           AnnouncementScraper
+import           Configs                        ( baseUrl )
 import           Control.Applicative
-import qualified Text.Regex.TDFA               as RegexTDFA
+import           Text.HTML.Scalpel
+import qualified Data.Set                      as Set
 import qualified Data.Text                     as T
+import qualified Data.Text.IO                  as T
+import qualified Text.Regex.TDFA               as RegexTDFA
 
-re :: String -> RegexTDFA.Regex
-re = RegexTDFA.makeRegex
+announcementFile :: FilePath
+announcementFile = "seenAnnouncements.txt"
 
-baseUrl :: URL
-baseUrl = "https://muusikoiden.net"
+saveSeenAnnouncementIds :: [Announcement] -> IO ()
+saveSeenAnnouncementIds =
+    T.appendFile announcementFile . T.unlines . map announcementId
 
-data Announcement =
-    Announcement { title :: T.Text, announcementId :: T.Text
-                 , description :: T.Text, author :: T.Text, authorId :: T.Text
-                 , price :: T.Text, thumbnails :: [T.Text], dates :: T.Text
-                 }
-    deriving (Show)
+loadSeenAnnouncementIds :: IO (Set.Set T.Text)
+loadSeenAnnouncementIds =
+    Set.fromList . T.lines <$> T.readFile announcementFile
 
-instance Eq Announcement where
-    (==) a b = announcementId a == announcementId b
-
-announcementScraper :: Scraper T.Text Announcement
-announcementScraper = do
-    (title, announcementId) <-
-        chroot ("td" @: [hasClass "tori_title"] // "a")
-        $   (,)
-        <$> text (tagSelector "a")
-        <*> attr "href" (tagSelector "a")
-    description        <- text $ "font" @: [hasClass "msg"]
-    (author, authorId) <-
-        chroot ("a" @: ["href" @=~ re "/jasenet.*"]) $ (,) <$> text "a" <*> attr
-            "href"
-            "a"
-    -- FIXME: Price doesn't get scraped properly
-    price      <- T.concat <$> innerHTMLs "p"
-    thumbnails <- attrs "src" $ "img" @: [hasClass "border"]
-    dates      <- text $ "small" @: [hasClass "light"]
-    return $ Announcement { .. }
-
-announcements :: Scraper T.Text [Announcement]
-announcements = chroots ("table" @: ["cellpadding" @= "2"]) announcementScraper
-
-scrapeAnnouncements :: URL -> IO (Maybe [Announcement])
-scrapeAnnouncements url = scrapeURL url announcements
+filterSeenAnnouncements :: Set.Set T.Text -> [Announcement] -> [Announcement]
+filterSeenAnnouncements seen =
+    filter (not . flip Set.member seen . announcementId)
 
 runApp :: IO ()
 runApp = do
     res <- scrapeAnnouncements
         (baseUrl <> "/tori/?type=sell&province=Keski-Suomi&category=20")
     case res of
-        Just anns -> mapM_ print anns
-        Nothing   -> print "Error: failed to scrape"
+        Just anns -> do
+            seen <- loadSeenAnnouncementIds
+            let newAnnouncements = filterSeenAnnouncements seen anns
+            mapM_ print newAnnouncements
+            saveSeenAnnouncementIds newAnnouncements
+        Nothing -> error "Error: failed to scrape"
