@@ -25,8 +25,9 @@ announcementScraper = do
     dates      <- text $ "small" @: [hasClass "light"]
     return $ Announcement { .. }
 
-announcements :: Scraper T.Text [Announcement]
-announcements = chroots ("table" @: ["cellpadding" @= "2"]) announcementScraper
+announcementsScraper :: Scraper T.Text [Announcement]
+announcementsScraper =
+    chroots ("table" @: ["cellpadding" @= "2"]) announcementScraper
 
 scrapeAnnouncements :: URL -> IO (Maybe [Announcement])
-scrapeAnnouncements url = scrapeURL url announcements
+scrapeAnnouncements url = scrapeURL url announcementsScraper

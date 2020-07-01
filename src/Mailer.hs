@@ -11,7 +11,7 @@ sendAnnouncementMail :: Config -> LT.Text -> IO ()
 sendAnnouncementMail Config {..} html =
     M.simpleMail (M.Address (Just recipientName) recipientEmail)
                  (M.Address (Just senderName) senderEmail)
-                 "Uusia ilmoituksia"
+                 "M.net-päivystäjän raportti"
                  "Saatavilla vain HTML-muodossa"
                  html
                  []

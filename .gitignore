@@ -4,4 +4,4 @@ out.html
 seenAnnouncements.txt
 .hie
 stan.html
-config.dhall
+*.dhall

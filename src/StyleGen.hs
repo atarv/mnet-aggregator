@@ -10,8 +10,8 @@ import qualified Data.Text.Lazy                as LT
 styleSheet :: LT.Text
 styleSheet = render mnetStyle
 
-headerFonts :: [T.Text]
-headerFonts = ["Inconsolata", "Consolas"]
+-- headerFontFamily :: [T.Text
+headerFontFamily = fontFamily ["Inconsolata", "Consolas"] [monospace]
 
 mnetStyle :: Css
 mnetStyle = do
@@ -20,11 +20,14 @@ mnetStyle = do
         fontFamily ["Verdana", "Geneva", "Helvetica"] [sansSerif]
         fontSize (em 0.9)
     h1 ? do
-        fontFamily headerFonts []
+        headerFontFamily
         background yellow
         fontSize (em 2)
     h2 ? do
-        fontFamily headerFonts [monospace]
+        headerFontFamily
+        textDecoration underline 
+    h3 ? do
+        headerFontFamily
         background yellow
     img ? do
         float floatRight

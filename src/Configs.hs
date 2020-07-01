@@ -1,20 +1,28 @@
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Configs (Config(..), loadConfig, baseUrl) where
+{-# LANGUAGE StrictData #-}
+module Configs (Config(..), Section(..), loadConfig, baseUrl) where
 import           Dhall
 
 baseUrl :: String
 baseUrl = "https://muusikoiden.net"
 
-data Config = Config { senderEmail :: Text
-                     , senderName :: Text
-                     , recipientEmail :: Text
-                     , recipientName :: Text
-                     , scrapeUrls :: [Text]
-                     , smtpPassword :: Text
-                     , smtpUsername :: Text
-                     , smtpPort :: Natural
-                     , hostname :: Text
+data Section = Section { sectionTitle :: !Text
+                       , sectionUrl :: !Text
+                       }
+    deriving (Generic, Show)
+
+instance FromDhall Section
+
+data Config = Config { senderEmail :: !Text
+                     , senderName :: !Text
+                     , recipientEmail :: !Text
+                     , recipientName :: !Text
+                     , sectionsToScrape :: ![Section]
+                     , smtpPassword :: !Text
+                     , smtpUsername :: !Text
+                     , smtpPort :: !Natural
+                     , hostname :: !Text
                      }
     deriving (Generic, Show)
 

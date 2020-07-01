@@ -25,7 +25,7 @@ instance Eq Announcement where
 
 instance ToMarkup Announcement where
     toMarkup Announcement {..} = div ! class_ "announcement" $ do
-        h2 $ a ! href (toValue $ T.pack baseUrl <> announcementId) $ text title
+        h3 $ a ! href (toValue $ T.pack baseUrl <> announcementId) $ text title
         div $ do
             H.span $ do
                 text "Ilmoittaja: "
