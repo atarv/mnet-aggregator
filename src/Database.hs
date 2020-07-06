@@ -20,6 +20,9 @@ connect DatabaseConfiguration {..} = checkedConnect $ defaultConnectInfo
     , connectAuth = Just $ TE.encodeUtf8 password
     }
 
+disconnect :: Connection -> IO ()
+disconnect = Database.Redis.disconnect
+
 getUsersSeenAnnouncements :: Connection -> T.Text -> IO (Either T.Text [T.Text])
 getUsersSeenAnnouncements dbConnection userEmail = runRedis dbConnection $ do
     dbResult <- smembers (TE.encodeUtf8 (seenKey userEmail))

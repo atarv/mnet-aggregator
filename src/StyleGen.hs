@@ -24,7 +24,7 @@ mnetStyle = do
         fontSize (em 2)
     h2 ? do
         headerFontFamily
-        textDecoration underline 
+        textDecoration underline
     h3 ? do
         headerFontFamily
         background yellow

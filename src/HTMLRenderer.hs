@@ -10,10 +10,9 @@ import           Text.Blaze.Html5.Attributes   as A
 import qualified Data.Text                     as T
 
 sectionToHtml :: T.Text -> [Announcement] -> String
-sectionToHtml sectionTitle [] =
-    renderHtml $ H.div !  A.class_ "section" $ do
-        H.h2 $  text  sectionTitle
-        H.p $ H.em "Ei uusia ilmoituksia"
+sectionToHtml sectionTitle [] = renderHtml $ H.div ! A.class_ "section" $ do
+    H.h2 $ text sectionTitle
+    H.p $ H.em "Ei uusia ilmoituksia"
 sectionToHtml sectionTitle announcements =
     renderHtml $ H.div ! A.class_ "section" $ do
         H.h2 $ text sectionTitle
