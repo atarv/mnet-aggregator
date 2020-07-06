@@ -4,58 +4,63 @@ module MnetWatcher (runApp) where
 import           Announcement
 import           AnnouncementScraper
 import           Configs
-import           Control.Applicative
-import           Control.Exception
 import           Control.Monad
 import           Data.Bifunctor
 import           Data.Maybe
 import           Data.Time
+import           Database
 import           HTMLRenderer
 import           Mailer
 import           System.Exit
-import           Text.HTML.Scalpel
 import qualified Data.Set                      as Set
 import qualified Data.Text                     as T
 import qualified Data.Text.Lazy                as LT
-import qualified Data.Text.IO                  as T
-import qualified Text.Regex.TDFA               as RegexTDFA
+import qualified Data.Text.IO                  as TIO
 
-announcementFile :: FilePath
-announcementFile = "seenAnnouncements.txt"
+filterSeenAnnouncements :: [T.Text] -> [Announcement] -> [Announcement]
+filterSeenAnnouncements seenIds =
+    filter (not . flip Set.member (Set.fromList seenIds) . announcementId)
 
-saveAnnouncementIds :: [Announcement] -> IO ()
-saveAnnouncementIds =
-    T.appendFile announcementFile . T.unlines . map announcementId
-
-loadAnnouncementIds :: IO (Set.Set T.Text)
-loadAnnouncementIds = catch
-    (Set.fromList . T.lines <$> T.readFile announcementFile)
-    -- This happens when file is not found. We can continue like we didn't read
-    -- any old announcements
-    (\(_ :: IOException) -> return Set.empty)
-
-filterSeenAnnouncements :: Set.Set T.Text -> [Announcement] -> [Announcement]
-filterSeenAnnouncements seen =
-    filter (not . flip Set.member seen . announcementId)
-
+scrapeSection :: Section -> IO (T.Text, Maybe [Announcement])
 scrapeSection Section {..} =
     (,) sectionTitle <$> scrapeAnnouncements (T.unpack sectionUrl)
+
+passResultOrExitFailure :: Either T.Text a -> IO a
+passResultOrExitFailure (Right val) = pure val
+passResultOrExitFailure (Left  err) = do
+    TIO.putStrLn err
+    -- FIXME: use exceptions instead of exiting, could fail straight from db 
+     -- calls
+    exitFailure
 
 runApp :: IO ()
 runApp = do
     conf <- loadConfig Nothing
+    conn <- connect (databaseConfig conf)
     when (null $ sectionsToScrape conf) $ do
-        print "No sections to scrape"
+        putStrLn "No sections to scrape"
         exitSuccess
-    res <- mapM scrapeSection (sectionsToScrape conf)
+
+    scrapedSections <- mapM scrapeSection (sectionsToScrape conf)
     -- Filter out all empty and failed scraped sections
     let sectionsWithContent = filter (\(_, xs) -> not $ null xs)
-            $ map (second $ fromMaybe []) res
+            $ map (second $ fromMaybe []) scrapedSections
     sectionsHtmls <- forM sectionsWithContent $ \(title, announcements) -> do
-        seen <- loadAnnouncementIds
-        let newAnnouncements = filterSeenAnnouncements seen announcements
-        saveAnnouncementIds newAnnouncements
-        pure $ sectionToHtml title newAnnouncements
+        res <- getUsersSeenAnnouncements conn (recipientEmail conf)
+        passResultOrExitFailure res >>= \seenIds -> do
+            let newAnnouncements =
+                    filterSeenAnnouncements seenIds announcements
+            stored <- storeSeenAnnouncements
+                conn
+                (recipientEmail conf)
+                (fmap announcementId newAnnouncements)
+            passResultOrExitFailure stored >>= \n ->
+                putStrLn
+                    $  show n
+                    <> " announcements stored from section: "
+                    <> T.unpack title
+            pure $ sectionToHtml title newAnnouncements
+
     time <- formatTime defaultTimeLocale "%-d.%-m.%Y %-R" <$> getZonedTime
     let emailTitle = "Raportti " <> time
         emailHtml  = sectionsToHtml emailTitle (concat sectionsHtmls)

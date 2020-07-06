@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE StrictData #-}
-module Configs (Config(..), Section(..), loadConfig, baseUrl) where
+module Configs where
 import           Dhall
 
 baseUrl :: String
@@ -11,10 +11,18 @@ data Section = Section { sectionTitle :: !Text
                        , sectionUrl :: !Text
                        }
     deriving (Generic, Show)
-
 instance FromDhall Section
 
-data Config = Config { senderEmail :: !Text
+data DatabaseConfiguration =
+    DatabaseConfiguration { hostname :: !Text
+                          , portNumber :: !Natural
+                          , password :: !Text
+                          }
+    deriving (Generic, Show)
+instance FromDhall DatabaseConfiguration
+
+data Config = Config { databaseConfig :: !DatabaseConfiguration
+                     , senderEmail :: !Text
                      , senderName :: !Text
                      , recipientEmail :: !Text
                      , recipientName :: !Text
@@ -22,10 +30,9 @@ data Config = Config { senderEmail :: !Text
                      , smtpPassword :: !Text
                      , smtpUsername :: !Text
                      , smtpPort :: !Natural
-                     , hostname :: !Text
+                     , smtpHostname :: !Text
                      }
     deriving (Generic, Show)
-
 instance FromDhall Config
 
 loadConfig :: Maybe Text -> IO Config

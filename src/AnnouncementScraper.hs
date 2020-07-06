@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings, RecordWildCards #-}
 module AnnouncementScraper (scrapeAnnouncements) where
 import           Announcement
-import           Control.Applicative
 import           Text.HTML.Scalpel
 import qualified Data.Text                     as T
 import qualified Text.Regex.TDFA               as RegexTDFA
@@ -11,7 +10,7 @@ re = RegexTDFA.makeRegex
 
 announcementScraper :: Scraper T.Text Announcement
 announcementScraper = do
-    (title, announcementId) <-
+    (announcementTitle, announcementId) <-
         chroot ("td" @: [hasClass "tori_title"] // "a")
         $   (,)
         <$> text (tagSelector "a")

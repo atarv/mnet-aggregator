@@ -4,13 +4,12 @@ import           Prelude                 hiding ( div
                                                 , span
                                                 )
 import           Clay
-import qualified Data.Text                     as T
 import qualified Data.Text.Lazy                as LT
 
 styleSheet :: LT.Text
 styleSheet = render mnetStyle
 
--- headerFontFamily :: [T.Text
+headerFontFamily :: Css
 headerFontFamily = fontFamily ["Inconsolata", "Consolas"] [monospace]
 
 mnetStyle :: Css

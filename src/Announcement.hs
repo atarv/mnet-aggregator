@@ -16,16 +16,17 @@ data Announcement =
                  , dates :: !T.Text
                  , description :: !T.Text
                  , thumbnails :: ![T.Text]
-                 , title :: !T.Text
+                 , announcementTitle :: !T.Text
                  }
     deriving (Show)
 
 instance Eq Announcement where
-    (==) a b = announcementId a == announcementId b
+    (==) x y = announcementId x == announcementId y
 
 instance ToMarkup Announcement where
     toMarkup Announcement {..} = div ! class_ "announcement" $ do
-        h3 $ a ! href (toValue $ T.pack baseUrl <> announcementId) $ text title
+        h3 $ a ! href (toValue $ T.pack baseUrl <> announcementId) $ text
+            announcementTitle
         div $ do
             H.span $ do
                 text "Ilmoittaja: "

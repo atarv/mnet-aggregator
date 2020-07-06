@@ -15,7 +15,7 @@ sendAnnouncementMail Config {..} html =
                  "Saatavilla vain HTML-muodossa"
                  html
                  []
-        >>= sendMailWithLogin' (T.unpack hostname)
+        >>= sendMailWithLogin' (T.unpack smtpHostname)
                                587
                                (T.unpack smtpUsername)
                                (T.unpack smtpPassword)

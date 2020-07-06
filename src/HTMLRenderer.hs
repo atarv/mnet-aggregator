@@ -3,7 +3,6 @@ module HTMLRenderer (sectionToHtml, sectionsToHtml) where
 
 import           Announcement
 import           Control.Monad                  ( forM_ )
-import           Data.Time
 import           StyleGen
 import           Text.Blaze.Html.Renderer.Pretty
 import           Text.Blaze.Html5              as H
