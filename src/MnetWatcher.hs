@@ -5,7 +5,6 @@ import           Announcement
 import           AnnouncementScraper
 import           Configs
 import           Control.Monad
-import           Data.Maybe
 import           Data.Time
 import           Database
 import           HTMLRenderer
@@ -13,7 +12,7 @@ import           Mailer
 import qualified Data.Set                      as Set
 import qualified Data.Text                     as T
 import qualified Data.Text.Lazy                as LT
-import           QueryOptions
+import           ScrapingOptions
 
 filterOutSeenAnnouncements :: [T.Text] -> [Announcement] -> [Announcement]
 filterOutSeenAnnouncements seenIds =
@@ -27,7 +26,7 @@ passResultOrFail :: Either T.Text a -> IO a
 passResultOrFail (Right val) = pure val
 passResultOrFail (Left  err) = fail (T.unpack err)
 
-scrapeAndReport :: AppConfig -> QueryOptions -> IO ()
+scrapeAndReport :: AppConfig -> ScrapingOptions -> IO ()
 scrapeAndReport conf opts = unless (null $ sections opts) $ do
     -- Report is generated only if there are sections to scrape
     conn            <- connect (databaseConfig conf)

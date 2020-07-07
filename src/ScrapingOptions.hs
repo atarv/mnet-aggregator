@@ -1,12 +1,12 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric     #-}
 
-module QueryOptions where
+module ScrapingOptions where
 import           Data.Aeson
 import           GHC.Generics
 import qualified Data.Text                     as T
 
-data QueryOptions = QueryOptions { recipientEmail :: !T.Text
+data ScrapingOptions = ScrapingOptions { recipientEmail :: !T.Text
                                  , recipientName :: !T.Text
                                  , sections :: ![Section]
                                  }

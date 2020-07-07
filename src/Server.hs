@@ -8,14 +8,14 @@ import           Network.Wai.Middleware.Cors
 import qualified Web.Scotty                    as S
 import qualified Web.Scotty.Trans              as ST
 import           MnetWatcher
-import           QueryOptions
+import           ScrapingOptions
 
 startServer :: AppConfig -> IO ()
 startServer conf = S.scotty (fromIntegral $ serverPort conf) $ do
     S.middleware $ cors (const $ Just corsPolicy)
     S.post "/generatereport" $ do
         queryOpts <- S.jsonData
-        ST.liftAndCatchIO $ scrapeAndReport conf (queryOpts :: QueryOptions)
+        ST.liftAndCatchIO $ scrapeAndReport conf (queryOpts :: ScrapingOptions)
 
 runServer :: IO ()
 runServer = loadConfig Nothing >>= startServer

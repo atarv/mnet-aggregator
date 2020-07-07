@@ -7,7 +7,7 @@ cabal-version: 1.12
 -- hash: 5084923acbe26d2752e4cc540e919625d96bc3cf7e01a20e1907b8ebae2cf3d6
 
 name:           mnet-paivystaja
-version:        0.1.1.0
+version:        0.1.1.1
 description:    Please see the README on GitHub at <https://github.com/atarv/mnet-paivystaja#readme>
 homepage:       https://github.com/atarv/mnet-paivystaja#readme
 bug-reports:    https://github.com/atarv/mnet-paivystaja/issues
@@ -36,7 +36,7 @@ library
       Database
       HTMLRenderer
       Mailer
-      QueryOptions
+      ScrapingOptions
       StyleGen
   hs-source-dirs:
       src

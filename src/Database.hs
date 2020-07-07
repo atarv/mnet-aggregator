@@ -1,5 +1,11 @@
 {-# LANGUAGE OverloadedStrings, RecordWildCards #-}
-module Database where
+module Database
+    ( Database.connect
+    , Database.disconnect
+    , getUsersSeenAnnouncements
+    , storeSeenAnnouncements
+    )
+where
 
 import           Database.Redis
 import           Configs                        ( DatabaseConfiguration(..) )

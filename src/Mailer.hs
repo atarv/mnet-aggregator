@@ -5,11 +5,11 @@ import           Network.Mail.SMTP
 import           Network.Mail.Mime             as M
 import qualified Data.Text.Lazy                as LT
 import qualified Data.Text                     as T
-import           QueryOptions
+import           ScrapingOptions
 
 
-sendAnnouncementMail :: MailConfig -> QueryOptions -> LT.Text -> IO ()
-sendAnnouncementMail MailConfig {..} QueryOptions {..} html =
+sendAnnouncementMail :: MailConfig -> ScrapingOptions -> LT.Text -> IO ()
+sendAnnouncementMail MailConfig {..} ScrapingOptions {..} html =
     M.simpleMail (M.Address (Just recipientName) recipientEmail)
                  (M.Address (Just senderName) senderEmail)
                  "M.net-päivystäjän raportti"
