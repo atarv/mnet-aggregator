@@ -1,4 +1,4 @@
-import MnetWatcher
+import Server
 
 main :: IO ()
-main = runApp
+main = runServer 

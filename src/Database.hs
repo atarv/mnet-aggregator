@@ -16,7 +16,7 @@ catchallErrorMsg = "Database error: this shouldn't happen"
 connect :: DatabaseConfiguration -> IO Connection
 connect DatabaseConfiguration {..} = checkedConnect $ defaultConnectInfo
     { connectHost = T.unpack hostname
-    , connectPort = PortNumber (fromIntegral portNumber)
+    , connectPort = PortNumber (fromIntegral databasePort)
     , connectAuth = Just $ TE.encodeUtf8 password
     }
 

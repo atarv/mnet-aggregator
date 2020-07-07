@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables, RecordWildCards #-}
-module MnetWatcher (runApp) where
+module MnetWatcher (scrapeAndReport) where
 
 import           Announcement
 import           AnnouncementScraper
@@ -10,13 +10,13 @@ import           Data.Time
 import           Database
 import           HTMLRenderer
 import           Mailer
-import           System.Exit
 import qualified Data.Set                      as Set
 import qualified Data.Text                     as T
 import qualified Data.Text.Lazy                as LT
+import           QueryOptions
 
-filterSeenAnnouncements :: [T.Text] -> [Announcement] -> [Announcement]
-filterSeenAnnouncements seenIds =
+filterOutSeenAnnouncements :: [T.Text] -> [Announcement] -> [Announcement]
+filterOutSeenAnnouncements seenIds =
     filter (not . flip Set.member (Set.fromList seenIds) . announcementId)
 
 scrapeSection :: Section -> IO (T.Text, Maybe [Announcement])
@@ -27,40 +27,31 @@ passResultOrFail :: Either T.Text a -> IO a
 passResultOrFail (Right val) = pure val
 passResultOrFail (Left  err) = fail (T.unpack err)
 
-runApp :: IO ()
-runApp = do
-    conf <- loadConfig Nothing
-    when (null $ sectionsToScrape conf) $ do
-        putStrLn "No sections to scrape"
-        exitSuccess
-    conn <- connect (databaseConfig conf)
-    scrapeAndReport conf conn
-  where
-    scrapeAndReport conf conn = do
-        scrapedSections <- mapM scrapeSection (sectionsToScrape conf)
-        -- Filter out all empty and failed scraped sections
-        let sectionsWithContent = filter (\(_, xs) -> not $ null xs)
-                $ map (fmap $ fromMaybe []) scrapedSections
-        sectionsHtmls <- forM sectionsWithContent $ \(title, announcements) ->
-            getUsersSeenAnnouncements conn (recipientEmail conf)
-                >>= passResultOrFail
-                >>= \seenIds -> do
-                        let newAnnouncements =
-                                filterSeenAnnouncements seenIds announcements
+scrapeAndReport :: AppConfig -> QueryOptions -> IO ()
+scrapeAndReport conf opts = unless (null $ sections opts) $ do
+    -- Report is generated only if there are sections to scrape
+    conn            <- connect (databaseConfig conf)
+    scrapedSections <- mapM scrapeSection (sections opts)
+    -- Filter out all empty and failed scraped sections and generate HTML from 
+    -- them
+    let sectionsWithContent =
+            [ (t, a) | (t, Just a) <- scrapedSections, (not . null) a ]
+    sectionsHtmls <- forM sectionsWithContent $ \(title, announcements) ->
+        getUsersSeenAnnouncements conn (recipientEmail opts)
+            >>= passResultOrFail
+            >>= \seenIds -> do
+                    let newAnnouncements =
+                            filterOutSeenAnnouncements seenIds announcements
+                    _numStored <-
                         storeSeenAnnouncements
                                 conn
-                                (recipientEmail conf)
+                                (recipientEmail opts)
                                 (fmap announcementId newAnnouncements)
                             >>= passResultOrFail
-                            >>= \n ->
-                                    putStrLn
-                                        $ show n
-                                        <> " announcements stored from section: "
-                                        <> T.unpack title
-                        pure $ sectionToHtml title newAnnouncements
-        -- Generate and send report of new announcements
-        time <- formatTime defaultTimeLocale "%-d.%-m.%Y %-R" <$> getZonedTime
-        let emailTitle = "Raportti " <> time
-            emailHtml  = sectionsToHtml emailTitle (concat sectionsHtmls)
-        sendAnnouncementMail conf (LT.pack emailHtml)
-        disconnect conn
+                    pure $ sectionToHtml title newAnnouncements
+    -- Generate and send report of new announcements
+    time <- formatTime defaultTimeLocale "%-d.%-m.%Y %-R" <$> getZonedTime
+    let mailTitle = "Raportti " <> time
+        mailHtml  = sectionsToHtml mailTitle (concat sectionsHtmls)
+    sendAnnouncementMail (mailConfig conf) opts (LT.pack mailHtml)
+    disconnect conn
