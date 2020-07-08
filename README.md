@@ -83,18 +83,18 @@ curl --request POST \
   --url http://localhost:8080/generatereport \
   --header 'content-type: application/json' \
   --data '{
-	"recipientEmail": "your.email@domain.org",
-	"recipientName": "Your name",
-	"sections": [
-		{
-			"sectionTitle": "Guitars",
-			"sectionUrl": "https://muusikoiden.net/tori/?category=8"
+    "recipientEmail": "your.email@domain.org",
+    "recipientName": "Your name",
+    "sections": [
+        {
+            "sectionTitle": "Guitars",
+            "sectionUrl": "https://muusikoiden.net/tori/?category=8"
         },
-		{
-			"sectionTitle": "Amps",
-			"sectionUrl": "https://muusikoiden.net/tori/?category=42"
+        {
+            "sectionTitle": "Amps",
+            "sectionUrl": "https://muusikoiden.net/tori/?category=42"
         }
-	]
+    ]
 }'
 ```
 
