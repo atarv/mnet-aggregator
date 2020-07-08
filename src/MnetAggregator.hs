@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables, RecordWildCards #-}
-module MnetWatcher (scrapeAndReport) where
+module MnetAggregator (scrapeAndReport) where
 
 import           Announcement
 import           AnnouncementScraper
@@ -9,10 +9,10 @@ import           Data.Time
 import           Database
 import           HTMLRenderer
 import           Mailer
+import           ScrapingOptions
 import qualified Data.Set                      as Set
 import qualified Data.Text                     as T
 import qualified Data.Text.Lazy                as LT
-import           ScrapingOptions
 
 filterOutSeenAnnouncements :: [T.Text] -> [Announcement] -> [Announcement]
 filterOutSeenAnnouncements seenIds =

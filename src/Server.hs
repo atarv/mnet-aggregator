@@ -2,13 +2,13 @@
 module Server (startServer, runServer) where
 
 import           Configs
-import           Network.HTTP.Types.Method
+import           MnetAggregator
 import           Network.HTTP.Types.Header
+import           Network.HTTP.Types.Method
 import           Network.Wai.Middleware.Cors
+import           ScrapingOptions
 import qualified Web.Scotty                    as S
 import qualified Web.Scotty.Trans              as ST
-import           MnetWatcher
-import           ScrapingOptions
 
 startServer :: AppConfig -> IO ()
 startServer conf = S.scotty (fromIntegral $ serverPort conf) $ do

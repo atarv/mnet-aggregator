@@ -7,9 +7,9 @@ module Database
     )
 where
 
-import           Database.Redis
 import           Configs                        ( DatabaseConfiguration(..) )
 import           Data.String                    ( IsString )
+import           Database.Redis
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as TE
 

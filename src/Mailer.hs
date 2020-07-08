@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings, RecordWildCards #-}
 module Mailer (sendAnnouncementMail) where
 import           Configs
-import           Network.Mail.SMTP
 import           Network.Mail.Mime             as M
-import qualified Data.Text.Lazy                as LT
-import qualified Data.Text                     as T
+import           Network.Mail.SMTP
 import           ScrapingOptions
+import qualified Data.Text                     as T
+import qualified Data.Text.Lazy                as LT
 
 
 sendAnnouncementMail :: MailConfig -> ScrapingOptions -> LT.Text -> IO ()
