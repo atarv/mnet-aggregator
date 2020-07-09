@@ -17,13 +17,16 @@ git clone https://github.com/atarv/mnet-paivystaja
 cd mnet-paivystaja
 ```
 
-Then install [Stack](https://docs.haskellstack.org/en/stable/README/#how-to-install) and run
+Then install
+[Stack](https://docs.haskellstack.org/en/stable/README/#how-to-install) and
+run
 
 ```sh
 stack build
 ```
 
-...or use Docker, but only after you have written the [configuration file](#Configuration):
+...or use Docker, but only after you have written the [configuration
+file](#Configuration):
 
 ```sh
 docker build -t mnet-aggregator .
@@ -76,26 +79,29 @@ docker run mnet-aggregator
 
 ## Usage
 
-The aggregator is run, when a HTTP POST request is made to the `/generatereport` path. Example with `curl`:
+The aggregator is run, when a HTTP POST request is made to the
+`/generatereport` path. Example with `curl`:
 
 ```sh
 curl --request POST \
   --url http://localhost:8080/generatereport \
   --header 'content-type: application/json' \
   --data '{
-	"recipientEmail": "your.email@domain.org",
-	"recipientName": "Your name",
-	"sections": [
-		{
-			"sectionTitle": "Guitars",
-			"sectionUrl": "https://muusikoiden.net/tori/?category=8"
+    "recipientEmail": "your.email@domain.org",
+    "recipientName": "Your name",
+    "sections": [
+        {
+            "sectionTitle": "Guitars",
+            "sectionUrl": "https://muusikoiden.net/tori/?category=8"
         },
-		{
-			"sectionTitle": "Amps",
-			"sectionUrl": "https://muusikoiden.net/tori/?category=42"
+        {
+            "sectionTitle": "Amps",
+            "sectionUrl": "https://muusikoiden.net/tori/?category=42"
         }
-	]
+    ]
 }'
 ```
 
-You'll probably want to run this with a cron job. You can use URLs from [Haku](https://muusikoiden.net/tori/haku.php), if you are looking for specific gear.
+You'll probably want to run this with a cron job. You can use URLs from
+[Haku](https://muusikoiden.net/tori/haku.php), if you are looking for
+specific gear.
