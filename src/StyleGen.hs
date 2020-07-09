@@ -1,3 +1,10 @@
+{-|
+Module         : StyleGen
+Description    : Generates the CSS-stylesheet for the report
+Copyright      : (c) Aleksi Tarvainen, 2020
+License        : BSD3
+Maintainer     : aleksi@atarv.dev
+-}
 {-# LANGUAGE OverloadedStrings #-}
 module StyleGen (styleSheet) where
 import           Prelude                 hiding ( div

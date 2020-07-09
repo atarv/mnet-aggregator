@@ -1,5 +1,12 @@
+{-|
+Module         : Listing
+Description    : Defining listing's relevant content and transofmations.
+Copyright      : (c) Aleksi Tarvainen, 2020
+License        : BSD3
+Maintainer     : aleksi@atarv.dev
+-}
 {-# LANGUAGE OverloadedStrings, RecordWildCards, StrictData #-}
-module Announcement (Announcement(..)) where
+module Listing (Listing(..)) where
 import           Prelude                 hiding ( div
                                                 , span
                                                 )
@@ -9,24 +16,24 @@ import           Text.Blaze.Html5              as H
 import           Text.Blaze.Html5.Attributes   as A
 import qualified Data.Text                     as T
 
-data Announcement =
-    Announcement { announcementId :: !T.Text
-                 , author :: !T.Text
-                 , authorId :: !T.Text
-                 , dates :: !T.Text
-                 , description :: !T.Text
-                 , thumbnails :: ![T.Text]
-                 , announcementTitle :: !T.Text
-                 }
+data Listing =
+    Listing { listingId :: !T.Text
+            , author :: !T.Text
+            , authorId :: !T.Text
+            , dates :: !T.Text
+            , description :: !T.Text
+            , thumbnails :: ![T.Text]
+            , listingTitle :: !T.Text
+            }
     deriving (Show)
 
-instance Eq Announcement where
-    (==) x y = announcementId x == announcementId y
+instance Eq Listing where
+    (==) x y = listingId x == listingId y
 
-instance ToMarkup Announcement where
-    toMarkup Announcement {..} = div ! class_ "announcement" $ do
-        h3 $ a ! href (toValue $ T.pack baseUrl <> announcementId) $ text
-            announcementTitle
+instance ToMarkup Listing where
+    toMarkup Listing {..} = div ! class_ "announcement" $ do
+        h3 $ a ! href (toValue $ T.pack baseUrl <> listingId) $ text
+            listingTitle
         div $ do
             H.span $ do
                 text "Ilmoittaja: "

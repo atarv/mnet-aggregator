@@ -1,7 +1,5 @@
 .stack-work/
 *~
-out.html
-seenAnnouncements.txt
 .hie
 stan.html
 *.dhall

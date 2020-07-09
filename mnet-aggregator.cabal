@@ -26,12 +26,12 @@ source-repository head
 
 library
   exposed-modules:
-      MnetWatcher
+      MnetAggregator
       Server
   other-modules:
       Paths_mnet_aggregator
-      Announcement
-      AnnouncementScraper
+      Listing
+      ListingScraper
       Configs
       Database
       HTMLRenderer

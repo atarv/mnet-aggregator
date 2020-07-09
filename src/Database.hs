@@ -1,9 +1,16 @@
+{-|
+Module         : Database
+Description    : Applications interface to Redis database.
+Copyright      : (c) Aleksi Tarvainen, 2020
+License        : BSD3
+Maintainer     : aleksi@atarv.dev
+-}
 {-# LANGUAGE OverloadedStrings, RecordWildCards #-}
 module Database
     ( Database.connect
-    , Database.disconnect
-    , getUsersSeenAnnouncements
-    , storeSeenAnnouncements
+    , disconnect
+    , getUsersSeenListings
+    , storeSeenListings
     )
 where
 
@@ -13,12 +20,16 @@ import           Database.Redis
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as TE
 
+-- | Prefix given string with the key for seen listings
 seenKey :: (Semigroup a, IsString a) => a -> a
 seenKey = (<>) "seen:"
 
+-- | Redis should fail with 'Left (Error e)', but just in case...
 catchallErrorMsg :: T.Text
 catchallErrorMsg = "Database error: this shouldn't happen"
 
+-- | Connect to database with user configured modifications to default
+-- connection info
 connect :: DatabaseConfiguration -> IO Connection
 connect DatabaseConfiguration {..} = checkedConnect $ defaultConnectInfo
     { connectHost = T.unpack hostname
@@ -26,11 +37,9 @@ connect DatabaseConfiguration {..} = checkedConnect $ defaultConnectInfo
     , connectAuth = Just $ TE.encodeUtf8 password
     }
 
-disconnect :: Connection -> IO ()
-disconnect = Database.Redis.disconnect
-
-getUsersSeenAnnouncements :: Connection -> T.Text -> IO (Either T.Text [T.Text])
-getUsersSeenAnnouncements dbConnection userEmail = runRedis dbConnection $ do
+-- | Query the set of listings that are seen by user with given email address
+getUsersSeenListings :: Connection -> T.Text -> IO (Either T.Text [T.Text])
+getUsersSeenListings dbConnection userEmail = runRedis dbConnection $ do
     dbResult <- smembers (TE.encodeUtf8 (seenKey userEmail))
     pure $ case dbResult of
         Right seen      -> Right $ fmap TE.decodeUtf8 seen
@@ -38,13 +47,15 @@ getUsersSeenAnnouncements dbConnection userEmail = runRedis dbConnection $ do
         Left  _         -> Left catchallErrorMsg
 
 
-storeSeenAnnouncements
+-- | Store the set of listings user with given email address has seen.
+-- Returns number of newly stored listings.
+storeSeenListings
     :: Connection -> T.Text -> [T.Text] -> IO (Either T.Text Integer)
-storeSeenAnnouncements _ _ [] = pure $ Right 0
-storeSeenAnnouncements dbConnection userEmail announcementIds =
+storeSeenListings _ _ [] = pure $ Right 0
+storeSeenListings dbConnection userEmail listingIds =
     runRedis dbConnection $ do
         res <- sadd (TE.encodeUtf8 $ seenKey userEmail)
-                    (map TE.encodeUtf8 announcementIds)
+                    (map TE.encodeUtf8 listingIds)
         pure $ case res of
             Right numberOfAdded -> Right numberOfAdded
             Left  (Error e)     -> Left $ TE.decodeUtf8 e

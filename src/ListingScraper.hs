@@ -1,6 +1,13 @@
+{-|
+Module         : ListingScraper
+Description    : Web scraping listings.
+Copyright      : (c) Aleksi Tarvainen, 2020
+License        : BSD3
+Maintainer     : aleksi@atarv.dev
+-}
 {-# LANGUAGE OverloadedStrings, RecordWildCards #-}
-module AnnouncementScraper (scrapeAnnouncements) where
-import           Announcement
+module ListingScraper (scrapeListings) where
+import           Listing
 import           Text.HTML.Scalpel
 import qualified Data.Text                     as T
 import qualified Text.Regex.TDFA               as RegexTDFA
@@ -8,9 +15,10 @@ import qualified Text.Regex.TDFA               as RegexTDFA
 re :: String -> RegexTDFA.Regex
 re = RegexTDFA.makeRegex
 
-announcementScraper :: Scraper T.Text Announcement
-announcementScraper = do
-    (announcementTitle, announcementId) <-
+-- | Scrape a single listing
+listingScraper :: Scraper T.Text Listing
+listingScraper = do
+    (listingTitle, listingId) <-
         chroot ("td" @: [hasClass "tori_title"] // "a")
         $   (,)
         <$> text (tagSelector "a")
@@ -22,11 +30,13 @@ announcementScraper = do
             "a"
     thumbnails <- attrs "src" $ "img" @: [hasClass "border"]
     dates      <- text $ "small" @: [hasClass "light"]
-    return $ Announcement { .. }
+    return $ Listing { .. }
 
-announcementsScraper :: Scraper T.Text [Announcement]
-announcementsScraper =
-    chroots ("table" @: ["cellpadding" @= "2"]) announcementScraper
+-- | Scrape all listings
+listingsScraper :: Scraper T.Text [Listing]
+listingsScraper =
+    chroots ("table" @: ["cellpadding" @= "2"]) listingScraper
 
-scrapeAnnouncements :: URL -> IO (Maybe [Announcement])
-scrapeAnnouncements url = scrapeURL url announcementsScraper
+-- | Scrape all listings from given section URL
+scrapeListings :: URL -> IO (Maybe [Listing])
+scrapeListings url = scrapeURL url listingsScraper
