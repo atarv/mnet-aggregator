@@ -13,6 +13,7 @@ import           Listing
 import           ListingScraper
 import           Configs
 import           Control.Monad
+import           Control.Concurrent
 import           Data.Time
 import           Database
 import           HTMLRenderer
@@ -26,7 +27,7 @@ import qualified Data.Text.Lazy                as LT
 filterOutSeenListings
     :: [T.Text] -- ^ List of seen listing ids
     -> [Listing] -- ^ Listings to filter
-    -> [Listing] -- ^ New listings only
+    -> [Listing] -- ^ Return only listings yet to be seen
 filterOutSeenListings seenIds =
     filter (not . flip Set.member (Set.fromList seenIds) . listingId)
 
@@ -35,7 +36,7 @@ scrapeSection :: Section -> IO (T.Text, Maybe [Listing])
 scrapeSection Section {..} =
     (,) sectionTitle <$> scrapeListings (T.unpack sectionUrl)
 
--- | Pass the result ('Right val') or fail with text in 'Left err'.
+-- | Pass the result (value in Right) or fail with text in 'Left err'.
 passResultOrFail :: Either T.Text a -> IO a
 passResultOrFail (Right val) = pure val
 passResultOrFail (Left  err) = fail (T.unpack err)
@@ -45,7 +46,12 @@ scrapeAndReport :: AppConfig -> ScrapingOptions -> IO ()
 scrapeAndReport conf opts = unless (null $ sections opts) $ do
     -- Report is generated only if there are sections to scrape
     conn            <- connect (databaseConfig conf)
-    scrapedSections <- mapM scrapeSection (sections opts)
+    scrapedSections <- mapM
+        (if False -- rtsSupportsBoundThreads
+            then runInBoundThread . scrapeSection
+            else scrapeSection
+        )
+        (sections opts)
     -- Filter out all empty and failed scraped sections and generate HTML from 
     -- them
     let sectionsWithContent =

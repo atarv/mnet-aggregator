@@ -23,8 +23,8 @@ sendListingMail MailConfig {..} ScrapingOptions {..} html =
                  "M.net-päivystäjän raportti"
                  "Saatavilla vain HTML-muodossa"
                  html
-                 []
+                 [] -- no attachments
         >>= sendMailWithLogin' (T.unpack smtpHostname)
-                               587
+                               (fromIntegral smtpPort)
                                (T.unpack smtpUsername)
                                (T.unpack smtpPassword)

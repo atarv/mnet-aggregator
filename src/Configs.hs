@@ -38,7 +38,6 @@ instance FromDhall MailConfig
 -- | This includes all the necessary configurations for app
 data AppConfig = AppConfig { databaseConfig :: !DatabaseConfiguration
                            , mailConfig :: !MailConfig
-                           -- | App's server is started on this port
                            , serverPort :: !Natural
                            }
     deriving (Generic, Show)
