@@ -1,7 +1,7 @@
 {-|
 Module         : MnetAggregator
 Description    : Most of the application's logic resides here. This module is
-                 responsible for connecting the services in a meaningful way.
+                 responsible for connecting the services.
 Copyright      : (c) Aleksi Tarvainen, 2020
 License        : BSD3
 Maintainer     : aleksi@atarv.dev
@@ -22,10 +22,13 @@ import           ScrapingOptions
 import qualified Data.Set                      as Set
 import qualified Data.Text                     as T
 import qualified Data.Text.Lazy                as LT
+import           Data.Either                    ( fromLeft
+                                                , isLeft
+                                                )
 
 -- | Listings whose ids are in the set of seen ids are filtered out
 filterOutSeenListings
-    :: [T.Text] -- ^ List of seen listing ids
+    :: [ListingId] -- ^ List of seen listing ids
     -> [Listing] -- ^ Listings to filter
     -> [Listing] -- ^ Return only listings yet to be seen
 filterOutSeenListings seenIds =
@@ -35,11 +38,6 @@ filterOutSeenListings seenIds =
 scrapeSection :: Section -> IO (T.Text, Maybe [Listing])
 scrapeSection Section {..} =
     (,) sectionTitle <$> scrapeListings (T.unpack sectionUrl)
-
--- | Pass the result (value in Right) or fail with text in 'Left err'.
-passResultOrFail :: Either T.Text a -> IO a
-passResultOrFail (Right val) = pure val
-passResultOrFail (Left  err) = fail (T.unpack err)
 
 -- | Scrape given sections, generate a report out of them and send it
 scrapeAndReport :: AppConfig -> ScrapingOptions -> IO ()
@@ -56,21 +54,21 @@ scrapeAndReport conf opts = unless (null $ sections opts) $ do
     -- them
     let sectionsWithContent =
             [ (t, a) | (t, Just a) <- scrapedSections, (not . null) a ]
-    sectionsHtmls <- forM sectionsWithContent $ \(title, announcements) ->
-        getUsersSeenListings conn (recipientEmail opts)
-            >>= passResultOrFail
-            >>= \seenIds -> do
-                    let newListings =
-                            filterOutSeenListings seenIds announcements
-                    _numStored <- -- ignored
-                        storeSeenListings conn
-                                          (recipientEmail opts)
-                                          (fmap listingId newListings)
-                            >>= passResultOrFail
-                    pure $ sectionToHtml title newListings
+    sectionsHtml <- forM sectionsWithContent $ \(title, announcements) -> do
+        resultSeenIds <- getUsersSeenListings conn (recipientEmail opts)
+        seenIds       <- case resultSeenIds of
+            Right ids -> pure ids
+            Left  err -> fail . T.unpack $ err
+        let newListings = filterOutSeenListings seenIds announcements
+        stored <- storeSeenListings conn
+                                    (recipientEmail opts)
+                                    (fmap listingId newListings)
+        -- We check that `stored` is `Left`, so empty string here is unreachable
+        when (isLeft stored) $ fail . T.unpack $ fromLeft "" stored
+        pure $ sectionToHtml title newListings
     -- Generate and send report of new announcements
     time <- formatTime defaultTimeLocale "%-d.%-m.%Y %-R" <$> getZonedTime
     let mailTitle = "Raportti " <> time
-        mailHtml  = sectionsToHtml mailTitle (concat sectionsHtmls)
+        mailHtml  = sectionsToHtml mailTitle (concat sectionsHtml)
     sendListingMail (mailConfig conf) opts (LT.pack mailHtml)
     disconnect conn

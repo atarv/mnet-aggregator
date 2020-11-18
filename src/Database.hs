@@ -5,9 +5,10 @@ Copyright      : (c) Aleksi Tarvainen, 2020
 License        : BSD3
 Maintainer     : aleksi@atarv.dev
 -}
-{-# LANGUAGE OverloadedStrings, RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings, RecordWildCards, LambdaCase #-}
 module Database
-    ( Database.connect
+    ( ListingId
+    , Database.connect
     , disconnect
     , getUsersSeenListings
     , storeSeenListings
@@ -19,6 +20,8 @@ import           Data.String                    ( IsString )
 import           Database.Redis
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as TE
+
+type ListingId = T.Text
 
 -- | Prefix given string with the key for seen listings
 seenKey :: (Semigroup a, IsString a) => a -> a
@@ -38,7 +41,7 @@ connect DatabaseConfiguration {..} = checkedConnect $ defaultConnectInfo
     }
 
 -- | Query the set of listings that are seen by user with given email address
-getUsersSeenListings :: Connection -> T.Text -> IO (Either T.Text [T.Text])
+getUsersSeenListings :: Connection -> T.Text -> IO (Either T.Text [ListingId])
 getUsersSeenListings dbConnection userEmail = runRedis dbConnection $ do
     dbResult <- smembers (TE.encodeUtf8 (seenKey userEmail))
     pure $ case dbResult of
@@ -50,14 +53,14 @@ getUsersSeenListings dbConnection userEmail = runRedis dbConnection $ do
 -- | Store the set of listings user with given email address has seen.
 -- Returns number of newly stored listings.
 storeSeenListings
-    :: Connection -> T.Text -> [T.Text] -> IO (Either T.Text Integer)
+    :: Connection -> T.Text -> [ListingId] -> IO (Either T.Text Integer)
 storeSeenListings _ _ [] = pure $ Right 0
 storeSeenListings dbConnection userEmail listingIds =
-    runRedis dbConnection $ do
-        res <- sadd (TE.encodeUtf8 $ seenKey userEmail)
-                    (map TE.encodeUtf8 listingIds)
-        pure $ case res of
-            Right numberOfAdded -> Right numberOfAdded
-            Left  (Error e)     -> Left $ TE.decodeUtf8 e
-            Left  _             -> Left catchallErrorMsg
+    runRedis dbConnection
+        $   \case
+                Right numberOfAdded -> Right numberOfAdded
+                Left  (Error e)     -> Left $ TE.decodeUtf8 e
+                Left  _             -> Left catchallErrorMsg
+        <$> sadd (TE.encodeUtf8 $ seenKey userEmail)
+                 (map TE.encodeUtf8 listingIds)
 

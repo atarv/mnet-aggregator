@@ -17,14 +17,15 @@ import           Text.Blaze.Html5.Attributes   as A
 import qualified Data.Text                     as T
 
 data Listing =
-    Listing { listingId :: !T.Text
-            , author :: !T.Text
-            , authorId :: !T.Text
-            , dates :: !T.Text
-            , description :: !T.Text
-            , thumbnails :: ![T.Text]
-            , listingTitle :: !T.Text
-            }
+    Listing 
+        { listingId :: !T.Text
+        , author :: !T.Text
+        , authorId :: !T.Text
+        , dates :: !T.Text
+        , description :: !T.Text
+        , thumbnails :: ![T.Text]
+        , listingTitle :: !T.Text
+        }
     deriving (Show)
 
 instance Eq Listing where

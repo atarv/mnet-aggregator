@@ -6,21 +6,28 @@ License        : BSD3
 Maintainer     : aleksi@atarv.dev
 -}
 {-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE DeriveGeneric  #-}
+{-# LANGUAGE StrictData  #-}
 
 module ScrapingOptions where
-import           Data.Aeson
-import           GHC.Generics
+import           Data.Aeson                     ( FromJSON
+                                                , ToJSON
+                                                )
+import           GHC.Generics                   ( Generic )
 import qualified Data.Text                     as T
 
-data ScrapingOptions = ScrapingOptions { recipientEmail :: !T.Text
-                                       , recipientName :: !T.Text
-                                       , sections :: ![Section]
-                                       }
+data ScrapingOptions = 
+    ScrapingOptions 
+        { recipientEmail :: T.Text
+        , recipientName :: T.Text
+        , sections :: [Section]
+        }
     deriving (Show, Generic, FromJSON, ToJSON)
 
 
-data Section = Section { sectionTitle :: !T.Text
-                       , sectionUrl :: !T.Text
-                       }
+data Section = 
+    Section 
+        { sectionTitle :: T.Text
+        , sectionUrl :: T.Text
+        }
     deriving (Generic, Show, FromJSON, ToJSON)

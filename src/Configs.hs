@@ -17,29 +17,33 @@ baseUrl :: String
 baseUrl = "https://muusikoiden.net"
 
 data DatabaseConfiguration =
-    DatabaseConfiguration { hostname :: !Text -- ^ Database's hostname
-                          , databasePort :: !Natural -- ^ Port number to connect
-                          , password :: !Text -- ^ Password to database
-                          }
+    DatabaseConfiguration
+        { hostname :: !Text -- ^ Database's hostname
+        , databasePort :: !Natural -- ^ Port number to connect
+        , password :: !Text -- ^ Password to database
+        }
     deriving (Generic, Show)
 instance FromDhall DatabaseConfiguration
 
 data MailConfig =
-    MailConfig { senderEmail :: !Text
-               , senderName :: !Text
-               , smtpPassword :: !Text
-               , smtpUsername :: !Text
-               , smtpPort :: !Natural
-               , smtpHostname :: !Text
-               }
+    MailConfig
+        { senderEmail :: !Text
+        , senderName :: !Text
+        , smtpPassword :: !Text
+        , smtpUsername :: !Text
+        , smtpPort :: !Natural
+        , smtpHostname :: !Text
+        }
     deriving (Show, Generic)
 instance FromDhall MailConfig
 
 -- | This includes all the necessary configurations for app
-data AppConfig = AppConfig { databaseConfig :: !DatabaseConfiguration
-                           , mailConfig :: !MailConfig
-                           , serverPort :: !Natural
-                           }
+data AppConfig =
+    AppConfig
+        { databaseConfig :: !DatabaseConfiguration
+        , mailConfig :: !MailConfig
+        , serverPort :: !Natural
+        }
     deriving (Generic, Show)
 instance FromDhall AppConfig
 

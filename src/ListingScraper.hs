@@ -14,8 +14,8 @@ import qualified Data.Text                     as T
 import qualified Text.Regex.TDFA               as RegexTDFA
 
 -- | Shorthand for constructing regexes
-re :: String -> RegexTDFA.Regex
-re = RegexTDFA.makeRegex
+regex :: String -> RegexTDFA.Regex
+regex = RegexTDFA.makeRegex
 
 -- | Scrape a single listing for relevant information, including thumbnail
 -- images.
@@ -27,7 +27,7 @@ listingScraper = do
             (text $ tagSelector "a")
             (attr "href" $ tagSelector "a")
     description        <- html $ "td" @: ["colspan" @= "2", "valign" @= "top"]
-    (author, authorId) <- chroot ("a" @: ["href" @=~ re "/jasenet.*"])
+    (author, authorId) <- chroot ("a" @: ["href" @=~ regex "/jasenet.*"])
         $ liftA2 (,) (text "a") (attr "href" "a")
     thumbnails <- attrs "src" $ "img" @: [hasClass "border"]
     dates      <- text $ "small" @: [hasClass "light"]
@@ -37,6 +37,7 @@ listingScraper = do
 listingsScraper :: Scraper T.Text [Listing]
 listingsScraper = chroots ("table" @: ["cellpadding" @= "2"]) listingScraper
 
--- | Scrape all listings from given section URL
+-- | Scrape all listings from given section URL. May throw errors from
+-- http-client!
 scrapeListings :: URL -> IO (Maybe [Listing])
 scrapeListings url = scrapeURL url listingsScraper
