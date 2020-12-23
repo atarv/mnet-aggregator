@@ -1,6 +1,6 @@
 {-|
 Module         : Database
-Description    : Applications interface to Redis database.
+Description    : Application's interface to Redis database.
 Copyright      : (c) Aleksi Tarvainen, 2020
 License        : BSD3
 Maintainer     : aleksi@atarv.dev

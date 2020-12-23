@@ -29,7 +29,6 @@ startServer conf = S.scotty (fromIntegral $ serverPort conf) $ do
 runServer :: IO ()
 runServer = loadConfig Nothing >>= startServer
 
-
 corsPolicy :: CorsResourcePolicy
 corsPolicy = CorsResourcePolicy Nothing
                                 [methodPost, methodOptions]

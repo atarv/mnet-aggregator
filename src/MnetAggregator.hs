@@ -7,17 +7,28 @@ License        : BSD3
 Maintainer     : aleksi@atarv.dev
 -}
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables, RecordWildCards #-}
-module MnetAggregator (scrapeAndReport) where
+module MnetAggregator
+    ( scrapeAndReport
+    )
+where
 
-import           Listing
-import           ListingScraper
+import           Listing                        ( Listing(listingId) )
+import           ListingScraper                 ( scrapeListings )
 import           Configs
-import           Control.Monad
-import           Control.Concurrent
+import           Control.Monad                  ( unless
+                                                , forM
+                                                , when
+                                                )
+import           Control.Concurrent             ( runInBoundThread
+                                                , rtsSupportsBoundThreads
+                                                )
+import           Control.Exception              ( bracket )
 import           Data.Time
 import           Database
-import           HTMLRenderer
-import           Mailer
+import           HTMLRenderer                   ( sectionToHtml
+                                                , sectionsToHtml
+                                                )
+import           Mailer                         ( sendListingMail )
 import           ScrapingOptions
 import qualified Data.Set                      as Set
 import qualified Data.Text                     as T
@@ -41,34 +52,35 @@ scrapeSection Section {..} =
 
 -- | Scrape given sections, generate a report out of them and send it
 scrapeAndReport :: AppConfig -> ScrapingOptions -> IO ()
-scrapeAndReport conf opts = unless (null $ sections opts) $ do
-    -- Report is generated only if there are sections to scrape
-    conn            <- connect (databaseConfig conf)
-    scrapedSections <- mapM
-        (if False -- rtsSupportsBoundThreads
-            then runInBoundThread . scrapeSection
-            else scrapeSection
-        )
-        (sections opts)
-    -- Filter out all empty and failed scraped sections and generate HTML from 
-    -- them
-    let sectionsWithContent =
-            [ (t, a) | (t, Just a) <- scrapedSections, (not . null) a ]
-    sectionsHtml <- forM sectionsWithContent $ \(title, announcements) -> do
-        resultSeenIds <- getUsersSeenListings conn (recipientEmail opts)
-        seenIds       <- case resultSeenIds of
-            Right ids -> pure ids
-            Left  err -> fail . T.unpack $ err
-        let newListings = filterOutSeenListings seenIds announcements
-        stored <- storeSeenListings conn
-                                    (recipientEmail opts)
-                                    (fmap listingId newListings)
-        -- We check that `stored` is `Left`, so empty string here is unreachable
-        when (isLeft stored) $ fail . T.unpack $ fromLeft "" stored
-        pure $ sectionToHtml title newListings
-    -- Generate and send report of new announcements
-    time <- formatTime defaultTimeLocale "%-d.%-m.%Y %-R" <$> getZonedTime
-    let mailTitle = "Raportti " <> time
-        mailHtml  = sectionsToHtml mailTitle (concat sectionsHtml)
-    sendListingMail (mailConfig conf) opts (LT.pack mailHtml)
-    disconnect conn
+scrapeAndReport conf opts = if null $ sections opts
+    then fail "No sections to scrape"
+    else bracket (connect $ databaseConfig conf) disconnect go
+  where
+    go conn = do
+        scrapedSections <- mapM
+            (if rtsSupportsBoundThreads
+                then runInBoundThread . scrapeSection
+                else scrapeSection
+            )
+            (sections opts)
+        -- Filter out all empty and failed scraped sections and generate 
+        -- HTML from them
+        let sectionsWithContent =
+                [ (t, a) | (t, Just a) <- scrapedSections, (not . null) a ]
+        sectionsHtml <- forM sectionsWithContent $ \(title, listings) -> do
+            newListings <-
+                fmap (`filterOutSeenListings` listings)
+                $   getUsersSeenListings conn (recipientEmail opts)
+                >>= either (fail . T.unpack) pure
+            stored <- storeSeenListings conn
+                                        (recipientEmail opts)
+                                        (fmap listingId newListings)
+            case stored of
+                Left err -> fail . T.unpack $ err
+                Right _storedCount ->
+                    pure $ sectionToHtml title newListings
+        -- Generate and send report of new listings
+        time <- formatTime defaultTimeLocale "%-d.%-m.%Y %-R" <$> getZonedTime
+        let mailTitle = "Raportti " <> time
+            mailHtml  = sectionsToHtml mailTitle (concat sectionsHtml)
+        sendListingMail (mailConfig conf) opts (LT.pack mailHtml)

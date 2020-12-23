@@ -6,7 +6,10 @@ License        : BSD3
 Maintainer     : aleksi@atarv.dev
 -}
 {-# LANGUAGE OverloadedStrings, RecordWildCards, StrictData #-}
-module Listing (Listing(..)) where
+module Listing
+    ( Listing(..)
+    )
+where
 import           Prelude                 hiding ( div
                                                 , span
                                                 )
@@ -17,7 +20,7 @@ import           Text.Blaze.Html5.Attributes   as A
 import qualified Data.Text                     as T
 
 data Listing =
-    Listing 
+    Listing
         { listingId :: !T.Text
         , author :: !T.Text
         , authorId :: !T.Text
@@ -40,8 +43,9 @@ instance ToMarkup Listing where
                 text "Ilmoittaja: "
                 a ! href (toValue $ T.pack baseUrl <> authorId) $ text author
             mapM_
-                (\t -> img ! src (toValue $ T.pack baseUrl <> t) ! alt
-                    "announcement image"
+                (\thumbnail ->
+                    img ! src (toValue $ T.pack baseUrl <> thumbnail) ! alt
+                        "announcement image"
                 )
                 thumbnails
             p $ preEscapedText description
