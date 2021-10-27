@@ -6,12 +6,21 @@ License        : BSD3
 Maintainer     : aleksi@atarv.dev
 -}
 {-# LANGUAGE OverloadedStrings, RecordWildCards #-}
-module ListingScraper (scrapeListings) where
+module ListingScraper (scrapeListings, ScrapingException) where
 import           Listing
 import           Control.Applicative
 import           Text.HTML.Scalpel
 import qualified Data.Text                     as T
+import           Data.Text.Encoding
 import qualified Text.Regex.TDFA               as RegexTDFA
+import           Network.HTTP.Simple
+import           Control.Exception
+
+-- | `scalpel` library doesn't give much information about why scraping failed
+-- so this is pretty basic.
+data ScrapingException = ScrapingException deriving (Show)
+
+instance Exception ScrapingException
 
 -- | Shorthand for constructing regexes
 regex :: String -> RegexTDFA.Regex
@@ -27,8 +36,9 @@ listingScraper = do
             (text $ tagSelector "a")
             (attr "href" $ tagSelector "a")
     description        <- html $ "td" @: ["colspan" @= "2", "valign" @= "top"]
-    (author, authorId) <- chroot ("a" @: ["href" @=~ regex "/jasenet.*"])
-        $ liftA2 (,) (text "a") (attr "href" "a")
+    (author, authorId) <-
+        chroot ("a" @: ["href" @=~ regex "/jasenet.*"])
+            $ liftA2 (,) (text "a") (attr "href" "a")
     thumbnails <- attrs "src" $ "img" @: [hasClass "border"]
     dates      <- text $ "small" @: [hasClass "light"]
     return $ Listing { .. }
@@ -39,5 +49,13 @@ listingsScraper = chroots ("table" @: ["cellpadding" @= "2"]) listingScraper
 
 -- | Scrape all listings from given section URL. May throw errors from
 -- http-client!
-scrapeListings :: URL -> IO (Maybe [Listing])
-scrapeListings url = scrapeURL url listingsScraper
+scrapeListings :: URL -> IO (Either SomeException [Listing])
+scrapeListings url = try $ do
+    request  <- parseRequestThrow $ "GET " <> url
+    response <- httpBS request
+    -- Mnet uses ISO8859-15, but this might yield close enough results
+    let body         = decodeLatin1 $ getResponseBody response
+        scrapeResult = scrapeStringLike body listingsScraper
+    case scrapeResult of
+        Nothing       -> throw ScrapingException
+        Just listings -> pure listings

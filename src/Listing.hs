@@ -6,10 +6,7 @@ License        : BSD3
 Maintainer     : aleksi@atarv.dev
 -}
 {-# LANGUAGE OverloadedStrings, RecordWildCards, StrictData #-}
-module Listing
-    ( Listing(..)
-    )
-where
+module Listing (Listing(..)) where
 import           Prelude                 hiding ( div
                                                 , span
                                                 )
@@ -19,17 +16,16 @@ import           Text.Blaze.Html5              as H
 import           Text.Blaze.Html5.Attributes   as A
 import qualified Data.Text                     as T
 
-data Listing =
-    Listing
-        { listingId :: !T.Text
-        , author :: !T.Text
-        , authorId :: !T.Text
-        , dates :: !T.Text
-        , description :: !T.Text
-        , thumbnails :: ![T.Text]
-        , listingTitle :: !T.Text
-        }
-    deriving (Show)
+
+data Listing = Listing
+    { listingId :: !T.Text
+    , author :: !T.Text
+    , authorId :: !T.Text
+    , dates :: !T.Text
+    , description :: !T.Text
+    , thumbnails :: ![T.Text]
+    , listingTitle :: !T.Text
+    } deriving (Show)
 
 instance Eq Listing where
     (==) x y = listingId x == listingId y

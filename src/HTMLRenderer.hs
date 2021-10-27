@@ -6,7 +6,7 @@ License        : BSD3
 Maintainer     : aleksi@atarv.dev
 -}
 {-# LANGUAGE OverloadedStrings #-}
-module HTMLRenderer (sectionToHtml, sectionsToHtml) where
+module HTMLRenderer (sectionToHtml, sectionsToHtml, errorSectionToHtml) where
 
 import           Listing
 import           Control.Monad                  ( forM_ )
@@ -16,14 +16,22 @@ import           Text.Blaze.Html5              as H
 import           Text.Blaze.Html5.Attributes   as A
 import qualified Data.Text                     as T
 
-sectionToHtml :: T.Text -> [Listing] -> String
-sectionToHtml sectionTitle [] = renderHtml $ H.div ! A.class_ "section" $ do
+listingsSection :: T.Text -> Html
+listingsSection sectionTitle = H.div ! A.class_ "section" $ do
     H.h2 $ text sectionTitle
+
+sectionToHtml :: T.Text -> [Listing] -> String
+sectionToHtml sectionTitle [] = renderHtml $ do
+    listingsSection sectionTitle
     H.p $ H.em "Ei uusia ilmoituksia"
-sectionToHtml sectionTitle listings =
-    renderHtml $ H.div ! A.class_ "section" $ do
-        H.h2 $ text sectionTitle
-        H.div ! A.class_ "announcement-list" $ forM_ listings toHtml
+sectionToHtml sectionTitle listings = renderHtml $ do
+    listingsSection sectionTitle
+    H.div ! A.class_ "announcement-list" $ forM_ listings toHtml
+
+errorSectionToHtml :: T.Text -> T.Text -> String
+errorSectionToHtml sectionTitle errorMessage = renderHtml $ do
+    listingsSection sectionTitle
+    H.p $ H.em ! A.class_ "section-error" $ "Virhe: " <> text errorMessage
 
 sectionsToHtml :: String -> String -> String
 sectionsToHtml topTitle sectionsHtml = renderHtml $ docTypeHtml $ do

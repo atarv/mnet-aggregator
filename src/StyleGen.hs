@@ -25,10 +25,14 @@ mnetStyle = do
         maxWidth (em 50)
         fontFamily ["Verdana", "Geneva", "Helvetica"] [sansSerif]
         fontSize (em 0.9)
+    body |> "section-error" ? do
+        color red
     h1 ? do
         headerFontFamily
         background yellow
         fontSize (em 2)
+        paddingLeft (em 0.5)
+        borderRadius (px 3) (px 3) (px 3) (px 3)
     h2 ? do
         headerFontFamily
         textDecoration underline
