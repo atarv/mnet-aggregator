@@ -1,2 +1,10 @@
 cradle:
   stack:
+    - path: "./app"
+      component: mnet-aggregator:exe:mnet-aggregator-exe
+    - path: "./lambda"
+      component: mnet-aggregator:exe:bootstrap
+    - path: "./src"
+      component: mnet-aggregator:lib
+    - path: "./test"
+      component: mnet-aggregator:test:mnet-aggregator-test

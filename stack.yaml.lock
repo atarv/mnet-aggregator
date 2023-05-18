@@ -7,13 +7,20 @@ packages:
 - completed:
     hackage: smtp-mail-0.2.0.0@sha256:b91c81f6dbb41a9ceee8c443385118684ecec55006b77f7d3c0e49cffd2468cf,1211
     pantry-tree:
-      size: 449
       sha256: 413c4c7e7c7573c8bf906c136a282aebfe37ecc25492ff4b5ec8c69ff8d190fe
+      size: 449
   original:
     hackage: smtp-mail-0.2.0.0@sha256:b91c81f6dbb41a9ceee8c443385118684ecec55006b77f7d3c0e49cffd2468cf,1211
+- completed:
+    hackage: aws-lambda-haskell-runtime-4.1.1@sha256:c3b3452d3a7f36950c22760fe44b51d49b43624fa3a0253e5bfc3d94809bb8fd,3024
+    pantry-tree:
+      sha256: b7e8426edb0b5d06713a26362308abbec03379e1f3ad9c6d63973088ad75cf62
+      size: 1453
+  original:
+    hackage: aws-lambda-haskell-runtime-4.1.1
 snapshots:
 - completed:
-    size: 586069
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/14.yaml
-    sha256: 87842ecbaa8ca9cee59a7e6be52369dbed82ed075cb4e0d152614a627e8fd488
-  original: lts-18.14
+    sha256: eccf3b87cf7521eb8e7704c2efbb579d2074a0a76c7b961e0f07b98b3079ada5
+    size: 634925
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2022/2/7.yaml
+  original: nightly-2022-02-07
