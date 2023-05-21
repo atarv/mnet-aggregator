@@ -3,3 +3,4 @@
 .hie
 stan.html
 *.dhall
+build/
