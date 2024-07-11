@@ -6,7 +6,7 @@ sends it to you via email. Ideally it is invoked recurringly with e.g. a cron
 job. Now there's no reason to procrastinate with manually going through the
 sections now and again!
 
-Hacked together with: Haskell <sub>(+ various libraries)</sub> and Redis.
+Hacked together with Haskell <sub>(+ various libraries)</sub> and AWS.
 
 ## Building
 
@@ -34,6 +34,21 @@ docker build -t mnet-aggregator .
 
 Building _might_ take a while the first time.
 
+### AWS Lambda
+
+To get a zip-archive suitable for running on AWS Lambda run the Makefile at repository root.
+
+```sh
+make
+```
+
+To create the Lambda function see [AWS documentation](https://docs.aws.amazon.com/lambda/latest/dg/configuration-function-zip.html).
+You can easily update the function by using AWS CLI:
+
+```sh
+aws lambda update-function-code --function-name example-function-name --zip-file build/output/function.zip
+```
+
 ## Configuration
 
 Configuring is done by creating `config.dhall` file in repository root. For
@@ -42,12 +57,7 @@ Configuration example:
 
 ```haskell
 -- config.dhall
-{ databaseConfig =
-    { hostname = "www.redisdatabase.com"
-    , databasePort = 6379
-    , password = "auth"
-    }
-, mailConfig =
+{ mailConfig =
     { smtpHostname = "smtp.mailprovider.com"
     , senderEmail = "listings@yourdomain.com"
     , senderName = "Listings aggregator"
@@ -56,12 +66,13 @@ Configuration example:
     , smtpUsername = "smtpuser"
     }
 , serverPort = 8080
+, dynamoDBTableName = "example-table"
 }
 ```
 
-For setting up a Redis instance, see [their
-documentation](https://redis.io/topics/quickstart) and for email
-configuration you should look up your email service providers guides.
+For setting up a DynamoDB table see [AWS documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/getting-started-step-1.html).
+See `lambda/Main.hs` for which environment variables must be set.
+Use `PK` as partition key and `SK` as sort key (both String type).
 
 ## Running
 
@@ -76,6 +87,8 @@ Docker:
 ```sh
 docker run mnet-aggregator
 ```
+
+Remember to set AWS credentials and AWS_REGION environment variables when running locally.
 
 ## Usage
 

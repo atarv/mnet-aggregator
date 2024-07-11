@@ -1,66 +1,46 @@
 {-|
 Module         : Database
-Description    : Application's interface to Redis database.
-Copyright      : (c) Aleksi Tarvainen, 2020
+Description    : Application's interface to DynamoDB
+Copyright      : (c) Aleksi Tarvainen, 2024
 License        : BSD3
 Maintainer     : aleksi@atarv.dev
 -}
-{-# LANGUAGE OverloadedStrings, RecordWildCards, LambdaCase #-}
-module Database
-    ( ListingId
-    , Database.connect
-    , disconnect
-    , getUsersSeenListings
-    , storeSeenListings
-    )
-where
+module Database where
 
-import           Configs                        ( DatabaseConfiguration(..) )
-import           Data.String                    ( IsString )
-import           Database.Redis
-import qualified Data.Text                     as T
-import qualified Data.Text.Encoding            as TE
+import           Amazonka                 (runResourceT)
+import qualified Amazonka
+import           Amazonka.DynamoDB
+import           Amazonka.DynamoDB.Lens
+import           Amazonka.DynamoDB.Types
+import           Amazonka.Prelude
+import           Control.Lens
+import           Control.Lens.Combinators
+import           Control.Monad
+import           Data.List.Lens
+import           Data.Maybe
+import qualified Data.Text                as T
+import qualified Data.Text.Internal.Read  as T
+import           Listing
 
 type ListingId = T.Text
 
--- | Prefix given string with the key for seen listings
-seenKey :: (Semigroup a, IsString a) => a -> a
-seenKey = (<>) "seen:"
-
--- | Redis should fail with 'Left (Error e)', but just in case...
-catchallErrorMsg :: T.Text
-catchallErrorMsg = "Database error: this shouldn't happen"
-
--- | Connect to database with user configured modifications to default
--- connection info
-connect :: DatabaseConfiguration -> IO Connection
-connect DatabaseConfiguration {..} = checkedConnect $ defaultConnectInfo
-    { connectHost = T.unpack hostname
-    , connectPort = PortNumber (fromIntegral databasePort)
-    , connectAuth = Just $ TE.encodeUtf8 password
-    }
-
--- | Query the set of listings that are seen by user with given email address
-getUsersSeenListings :: Connection -> T.Text -> IO (Either T.Text [ListingId])
-getUsersSeenListings dbConnection userEmail = runRedis dbConnection $ do
-    dbResult <- smembers (TE.encodeUtf8 (seenKey userEmail))
-    pure $ case dbResult of
-        Right seen      -> Right $ fmap TE.decodeUtf8 seen
-        Left  (Error e) -> Left $ TE.decodeUtf8 e
-        Left  _         -> Left catchallErrorMsg
-
+getUsersSeenListings :: Amazonka.Env -> T.Text -> IO (Either T.Text [ListingId])
+getUsersSeenListings env userEmail = undefined
 
 -- | Store the set of listings user with given email address has seen.
--- Returns number of newly stored listings.
-storeSeenListings
-    :: Connection -> T.Text -> [ListingId] -> IO (Either T.Text Integer)
-storeSeenListings _ _ [] = pure $ Right 0
-storeSeenListings dbConnection userEmail listingIds =
-    runRedis dbConnection
-        $   \case
-                Right numberOfAdded -> Right numberOfAdded
-                Left  (Error e)     -> Left $ TE.decodeUtf8 e
-                Left  _             -> Left catchallErrorMsg
-        <$> sadd (TE.encodeUtf8 $ seenKey userEmail)
-                 (map TE.encodeUtf8 listingIds)
-
+-- Returns identifiers of listings that already existed.
+storeListings :: Amazonka.Env
+    -> T.Text -- ^ DynamoDB table name
+    -> T.Text -- ^ User identifier (email)
+    -> T.Text -- ^ Section title
+    -> [Listing] -- ^ Listings to store
+    -> IO [ListingId]
+storeListings awsEnv tableName userId sectionTitle listings = do
+        results <- runResourceT $ forM listings $ \listing -> do
+            let model = toModel userId sectionTitle listing
+                putRequest = newPutItem tableName
+                    & putItem_returnValues ?~ ReturnValue_ALL_OLD
+                    & putItem_item .~ model
+            Amazonka.send awsEnv putRequest
+        let returnedItems = mapMaybe (^. putItemResponse_attributes) results
+        pure $ listingId . fromModel <$> returnedItems

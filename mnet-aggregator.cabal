@@ -42,14 +42,17 @@ library
   build-depends:
       base >=4.7 && <5
       , aeson
+      , amazonka
+      , amazonka-core
+      , amazonka-dynamodb
       , async
       , blaze-html
       , bytestring
       , clay
       , containers
       , dhall
-      , hedis
       , http-conduit
+      , lens
       , mime-mail
       , regex-tdfa
       , scalpel
@@ -67,6 +70,7 @@ executable mnet-aggregator-exe
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -fwrite-ide-info -hiedir=.hie
   build-depends:
       base >=4.7 && <5
+    , amazonka
     , http-types
     , mnet-aggregator
     , scotty
@@ -84,7 +88,8 @@ executable bootstrap
   build-depends:
       base >=4.7 && <5
     , aeson
-    , aws-lambda-haskell-runtime
+    , amazonka
+    , aws-lambda-haskell-runtime >= 4.0.0
     , mnet-aggregator
     , text
   default-language: Haskell2010

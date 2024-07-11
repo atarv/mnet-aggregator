@@ -5,7 +5,7 @@
 # OS libraries, like glibc, etc. are sufficiently different between the two
 # systems, that a binary compiled on Ubunut 18.04 cannot work when deployed to
 # AWS Lambda.
-FROM amazonlinux:2.0.20230504.1
+FROM amazonlinux:2023
 
 SHELL ["/bin/bash", "--rcfile", "~/.profile", "-c", "-o", "pipefail"]
 ARG BOOTSTRAP=mnet-aggregator:exe:bootstrap
@@ -20,7 +20,7 @@ USER root
 RUN du -a /lib64 /usr/lib64 | cut -f2 > /root/default-libraries
 
 # Installing basic dependencies
-RUN yum install -y \
+RUN dnf install -y \
     git-core \
     tar \
     sudo \
@@ -32,16 +32,16 @@ RUN yum install -y \
     postgresql-devel \
     libicu libicu-devel \
     libyaml libyaml-devel \
-    libtinfo libtinfo-devel \
     ncurses-term ncurses-devel \
- && yum clean all
+ && dnf clean all
+    # libtinfo libtinfo-devel \
 
-RUN yum groupinstall -y "Development Tools" "Development Libraries"
+RUN dnf group install -y "Development Tools"
 
 # Installing Haskell Stack
 RUN curl -sSL https://get.haskellstack.org/ | sh
 
-ARG STACK_RESOLVER=nightly-2022-02-07
+ARG STACK_RESOLVER=lts-22.20
 # Setting up GHC
 RUN stack setup --resolver=${STACK_RESOLVER} && stack update
 

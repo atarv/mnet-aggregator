@@ -1,6 +1,6 @@
 # Code reused from: https://medium.com/permutive/optimized-docker-builds-for-haskell-76a9808eb10b
 # Loosely based on https://www.fpcomplete.com/blog/2017/12/building-haskell-apps-with-docker
-FROM fpco/stack-build:lts-18.14 as dependencies
+FROM fpco/stack-build:lts-22.20 as dependencies
 RUN mkdir /opt/build
 WORKDIR /opt/build
 
@@ -15,7 +15,7 @@ COPY mnet-aggregator.cabal stack.yaml stack.yaml.lock /opt/build/
 RUN stack build --system-ghc --dependencies-only
 
 # -------------------------------------------------------------------------------------------
-FROM fpco/stack-build:lts-18.14 as build
+FROM fpco/stack-build:lts-22.20 as build
 
 # Copy compiled dependencies from previous stage
 COPY --from=dependencies /root/.stack /root/.stack
