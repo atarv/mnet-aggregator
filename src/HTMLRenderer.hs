@@ -8,13 +8,13 @@ Maintainer     : aleksi@atarv.dev
 {-# LANGUAGE OverloadedStrings #-}
 module HTMLRenderer (sectionToHtml, sectionsToHtml, errorSectionToHtml) where
 
+import           Control.Monad                   (forM_)
+import qualified Data.Text                       as T
 import           Listing
-import           Control.Monad                  ( forM_ )
 import           StyleGen
 import           Text.Blaze.Html.Renderer.Pretty
-import           Text.Blaze.Html5              as H
-import           Text.Blaze.Html5.Attributes   as A
-import qualified Data.Text                     as T
+import           Text.Blaze.Html5                as H
+import           Text.Blaze.Html5.Attributes     as A
 
 listingsSection :: T.Text -> Html
 listingsSection sectionTitle = H.div ! A.class_ "section" $ do

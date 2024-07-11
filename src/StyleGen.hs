@@ -7,11 +7,9 @@ Maintainer     : aleksi@atarv.dev
 -}
 {-# LANGUAGE OverloadedStrings #-}
 module StyleGen (styleSheet) where
-import           Prelude                 hiding ( div
-                                                , span
-                                                )
 import           Clay
-import qualified Data.Text.Lazy                as LT
+import qualified Data.Text.Lazy as LT
+import           Prelude        hiding (div, span)
 
 styleSheet :: LT.Text
 styleSheet = render mnetStyle
@@ -41,7 +39,7 @@ mnetStyle = do
         background yellow
     img ? do
         float floatRight
-        border ridge (px 2) black
+        border (px 2) ridge black
         margin 0 0 (em 1) (em 1)
         maxWidth (pct 40)
     div # byClass "announcement" ? do

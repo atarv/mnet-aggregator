@@ -5,16 +5,17 @@ Copyright      : (c) Aleksi Tarvainen, 2020
 License        : BSD3
 Maintainer     : aleksi@atarv.dev
 -}
-{-# LANGUAGE OverloadedStrings, RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 module ListingScraper (scrapeListings, ScrapingException) where
-import           Listing
 import           Control.Applicative
-import           Text.HTML.Scalpel
-import qualified Data.Text                     as T
-import           Data.Text.Encoding
-import qualified Text.Regex.TDFA               as RegexTDFA
-import           Network.HTTP.Simple
 import           Control.Exception
+import qualified Data.Text           as T
+import           Data.Text.Encoding
+import           Listing
+import           Network.HTTP.Simple
+import           Text.HTML.Scalpel
+import qualified Text.Regex.TDFA     as RegexTDFA
 
 -- | `scalpel` library doesn't give much information about why scraping failed
 -- so this is pretty basic.
@@ -41,7 +42,7 @@ listingScraper = do
             $ liftA2 (,) (text "a") (attr "href" "a")
     thumbnails <- attrs "src" $ "img" @: [hasClass "border"]
     dates      <- text $ "small" @: [hasClass "light"]
-    return $ Listing { .. }
+    return $ Listing{..}
 
 -- | Scrape all listings
 listingsScraper :: Scraper T.Text [Listing]

@@ -17,7 +17,8 @@
 #
 # resolver: ./custom-snapshot.yaml
 # resolver: https://example.com/snapshots/2018-01-01.yaml
-resolver: nightly-2022-02-07
+# resolver: nightly-2022-02-07
+resolver: lts-22.20
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -40,8 +41,12 @@ packages:
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
 #
 extra-deps:
- - smtp-mail-0.2.0.0@sha256:b91c81f6dbb41a9ceee8c443385118684ecec55006b77f7d3c0e49cffd2468cf,1211 
- - aws-lambda-haskell-runtime-4.1.1
+# - smtp-mail-0.2.0.0@sha256:b91c81f6dbb41a9ceee8c443385118684ecec55006b77f7d3c0e49cffd2468cf,1211 
+- smtp-mail-0.4.0.1
+- aws-lambda-haskell-runtime-4.3.2
+# - http-types-0.12.4
+# - connection-0.3.1@sha256:3dcbf2f10d1677d339267d6dacb38a24913622edf42b05f75a73f381610ddbfc,1563
+# - safe-exceptions-checked-0.1.0@sha256:ae142f284c6b102f0e7606a69a5719f4f72771d9cc353af72fa4484326689100,1603
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
