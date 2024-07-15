@@ -69,10 +69,15 @@ scrapeAndReport awsEnv AppConfig {..} opts@ScrapingOptions {..} = do
     time <- formatTime defaultTimeLocale "%-d.%-m.%Y %-R" <$> getZonedTime
     let mailTitle = "Raportti " <> time
         mailHtml  = sectionsToHtml mailTitle (concat sectionsHtml)
-    sendListingMail mailConfig opts (LT.pack mailHtml)
+    sendListingMail awsEnv mailConfig opts (LT.pack mailHtml)
   where
     -- Remove seen listings (which are stored in a database) from the list.
     -- Listings are stored to database during this process.
     diffListingsWithSeen title listings = do
-        storedIds <- storeListings awsEnv dynamoDBTableName recipientEmail title listings
+        storedIds <- storeListings 
+            awsEnv 
+            dynamoDBTableName 
+            recipientEmail 
+            title 
+            listings
         pure $ filterOutSeenListings storedIds listings
