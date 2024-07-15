@@ -19,10 +19,6 @@ baseUrl = "https://muusikoiden.net"
 data MailConfig = MailConfig
     { senderEmail  :: !Text
     , senderName   :: !Text
-    , smtpPassword :: !Text
-    , smtpUsername :: !Text
-    , smtpPort     :: !Natural
-    , smtpHostname :: !Text
     } deriving (Show, Generic)
 
 instance FromDhall MailConfig
