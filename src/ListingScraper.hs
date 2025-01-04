@@ -7,7 +7,7 @@ Maintainer     : aleksi@atarv.dev
 -}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
-module ListingScraper (scrapeListings, ScrapingException) where
+module ListingScraper (scrapeListings, scrapeListingsText, ScrapingException) where
 import           Control.Applicative
 import           Control.Exception
 import qualified Data.Text           as T
@@ -27,26 +27,36 @@ instance Exception ScrapingException
 regex :: String -> RegexTDFA.Regex
 regex = RegexTDFA.makeRegex
 
+captureDates :: T.Text -> (T.Text, T.Text)
+captureDates txt = let
+    dateFormat =  "([0-9]{2})\\.([0-9]{2})\\.([0-9]{4})" :: String
+    matches = RegexTDFA.getAllTextMatches $ txt RegexTDFA.=~ dateFormat
+    in case matches of
+        start : end : _ -> (start, end)
+        _               -> ("", "")
+
 -- | Scrape a single listing for relevant information, including thumbnail
 -- images.
 listingScraper :: Scraper T.Text Listing
 listingScraper = do
     (listingTitle, listingId) <-
-        chroot ("td" @: [hasClass "tori_title"] // "a") $ liftA2
+        chroot ("td" // "a") $ liftA2
             (,)
             (text $ tagSelector "a")
             (attr "href" $ tagSelector "a")
-    description        <- html $ "td" @: ["colspan" @= "2", "valign" @= "top"]
+    description        <- html $ "font" @: [hasClass "msg"]
     (author, authorId) <-
         chroot ("a" @: ["href" @=~ regex "/jasenet.*"])
             $ liftA2 (,) (text "a") (attr "href" "a")
-    thumbnails <- attrs "src" $ "img" @: [hasClass "border"]
-    dates      <- text $ "small" @: [hasClass "light"]
+    thumbnails <- attrs "src" $ "img" @: [hasClass "tori-thumb"]
+    metaText <- (!! 2) <$> texts "td"
+    let (start, end) = captureDates metaText
+        dates = "Lisätty: " <> start <> " Voimassa: " <> end
     return $ Listing{..}
 
 -- | Scrape all listings
 listingsScraper :: Scraper T.Text [Listing]
-listingsScraper = chroots ("table" @: ["cellpadding" @= "2"]) listingScraper
+listingsScraper = chroots ("table" @: [hasClass "tori-advert"]) listingScraper
 
 -- | Scrape all listings from given section URL. May throw errors from
 -- http-client!
@@ -56,7 +66,10 @@ scrapeListings url = try $ do
     response <- httpBS request
     -- Mnet uses ISO8859-15, but this might yield close enough results
     let body         = decodeLatin1 $ getResponseBody response
-        scrapeResult = scrapeStringLike body listingsScraper
+        scrapeResult = scrapeListingsText body 
     case scrapeResult of
         Nothing       -> throw ScrapingException
         Just listings -> pure listings
+
+scrapeListingsText :: T.Text -> Maybe [Listing]
+scrapeListingsText body = scrapeStringLike body listingsScraper
