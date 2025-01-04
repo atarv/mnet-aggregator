@@ -46,7 +46,7 @@ To create the Lambda function see [AWS documentation](https://docs.aws.amazon.co
 You can easily update the function by using AWS CLI:
 
 ```sh
-aws lambda update-function-code --function-name example-function-name --zip-file build/output/function.zip
+aws lambda update-function-code --function-name example-function-name --zip-file fileb://build/output/function.zip
 ```
 
 ## Configuration
