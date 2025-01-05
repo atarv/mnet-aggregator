@@ -44,7 +44,10 @@ listingScraper = do
             (,)
             (text $ tagSelector "a")
             (attr "href" $ tagSelector "a")
-    description        <- html $ "font" @: [hasClass "msg"]
+    description        <- chroot ("td" @: ["colspan" @= "2"]) $ do
+            desc <- html "font"
+            price <- mconcat <$> texts (textSelector `atDepth` 1)
+            pure $ desc <> "<br><br>Hinta: " <> price
     (author, authorId) <-
         chroot ("a" @: ["href" @=~ regex "/jasenet.*"])
             $ liftA2 (,) (text "a") (attr "href" "a")
