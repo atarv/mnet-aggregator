@@ -21,6 +21,7 @@ import           Prelude                     hiding (div, span)
 import           Text.Blaze.Html
 import           Text.Blaze.Html5            as H
 import           Text.Blaze.Html5.Attributes as A
+import           Text.Read
 
 data Listing = Listing
     { listingId    :: !T.Text
@@ -30,6 +31,9 @@ data Listing = Listing
     , description  :: !T.Text
     , thumbnails   :: ![T.Text]
     , listingTitle :: !T.Text
+    , location     :: !T.Text
+    , county       :: !T.Text
+    , price        :: !(Maybe Double)
     } deriving (Show)
 
 instance Eq Listing where
@@ -51,7 +55,10 @@ instance ToMarkup Listing where
                 )
                 thumbnails
             p $ preEscapedText description
-            H.span $ text dates
+            p $ do
+                text dates
+                H.br
+                text $ "Paikkakunta: " <> location <> " (" <> county <> ")"
         hr
 
 toModel :: T.Text -> T.Text -> Listing -> HashMap Text DB.AttributeValue
@@ -66,6 +73,9 @@ toModel userId sectionTitle Listing{..} = fromList
     , ("thumbnails", if null thumbnails then NULL else SS $ fromList thumbnails)
     , ("title", S listingTitle)
     , ("sectionTitle", S sectionTitle)
+    , ("location", S location)
+    , ("county", S county)
+    , ("price", if null price then NULL else N $ T.pack $ show price)
     ]
 
 fromModel :: HashMap Text DB.AttributeValue -> Listing
@@ -77,6 +87,9 @@ fromModel model = Listing
     , thumbnails = fromSS model "thumbnails"
     , listingTitle = fromS model "title"
     , description = fromS model "description"
+    , location = fromSDefault model "location"
+    , county = fromSDefault model "county"
+    , price = fromNum model "price"
     }
   where
     fromS model fieldName =
@@ -87,6 +100,14 @@ fromModel model = Listing
                 <> fieldName
                 <> "': "
                 <> show val
+    fromSDefault model fieldName =
+        case model ^. at (T.pack fieldName) of
+            Just (S str) -> str
+            _            -> ""
+    fromNum model fieldName =
+        case model ^. at (T.pack fieldName) of
+            Just (N str) -> readMaybe (T.unpack str)
+            _            -> Nothing
     fromSS model fieldName =
         case model ^. at (T.pack fieldName) of
             Just (SS strings) -> Amazonka.Prelude.toList strings
