@@ -75,7 +75,9 @@ toModel userId sectionTitle Listing{..} = fromList
     , ("sectionTitle", S sectionTitle)
     , ("location", S location)
     , ("county", S county)
-    , ("price", if null price then NULL else N $ T.pack $ show price)
+    , ("price", case price of
+            Nothing  -> NULL
+            Just num -> N $ T.pack $ show num)
     ]
 
 fromModel :: HashMap Text DB.AttributeValue -> Listing
