@@ -1,49 +1,38 @@
 {-# LANGUAGE OverloadedStrings #-}
-
 import qualified Amazonka
 import           Configs
-import           Control.Exception
-import           Control.Monad.IO.Class
-import           GHC.IO                      (catchAny)
+import           Data.Aeson
+import qualified Data.ByteString     as BS
+import           Data.Text           as T
+import           GHC.Stack           (HasCallStack)
 import           MnetAggregator
-import           Network.HTTP.Types.Header
-import           Network.HTTP.Types.Method
-import           Network.Wai.Middleware.Cors
-import           ScrapingOptions
-import qualified Web.Scotty                  as S
-import qualified Web.Scotty.Trans            as ST
+import           Options.Applicative
 
-main :: IO ()
-main = runServer
+data CliOptions = CliOptions
+    { configPath          :: Maybe String
+    , scrapingOptionsPath :: String
+    }
 
--- | Start the server with given configuration
-startServer :: MonadIO m => AppConfig -> m ()
-startServer conf = do
-    awsEnv <- liftIO $ Amazonka.newEnv Amazonka.discover
-    liftIO $ S.scotty (fromIntegral $ serverPort conf) $ do
-        S.middleware $ cors (const $ Just corsPolicy)
-        S.post "/generatereport" $ do
-            queryOpts <- S.jsonData
-            ST.liftAndCatchIO $ 
-                scrapeAndReport 
-                    awsEnv 
-                    conf 
-                    (queryOpts :: ScrapingOptions) 
-                `catchAny` (\e -> do 
-                    putStrLn $ "Error: " <> show e
-                    throwIO e)
+options :: Parser CliOptions
+options = CliOptions
+    <$> optional (
+        strOption (long "config"
+            <> short 'c'
+            <> metavar "PATH"
+            <> help "Path to config (.dhall)")
+        )
+    <*> strArgument (metavar "SCRAPING_OPTIONS_PATH"
+        <> help "Path to scraping options (.json)")
 
--- | Load config and then start server
-runServer :: IO ()
-runServer = loadConfig Nothing >>= startServer
-
-corsPolicy :: CorsResourcePolicy
-corsPolicy = CorsResourcePolicy
-    Nothing
-    [methodPost, methodOptions]
-    [hContentType]
-    Nothing
-    Nothing
-    False
-    False
-    False
+main :: HasCallStack => IO ()
+main = do
+    opts <- customExecParser
+        (prefs $ showHelpOnEmpty <> showHelpOnError)
+        (info (options <**> helper)
+        (header "mnet-aggregator-exe"
+            <> progDesc "Scrape Muusikoiden.net listings and send a report via email"
+            <> fullDesc))
+    aws <- Amazonka.newEnv Amazonka.discover
+    config <- loadConfig (T.pack <$> configPath opts)
+    scrapingOpts <- throwDecodeStrict =<< BS.readFile (scrapingOptionsPath opts)
+    scrapeAndReport aws config scrapingOpts

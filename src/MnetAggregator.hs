@@ -2,7 +2,7 @@
 Module         : MnetAggregator
 Description    : Most of the application's logic resides here. This module is
                  responsible for connecting the services.
-Copyright      : (c) Aleksi Tarvainen, 2020
+Copyright      : (c) Aleksi Tarvainen, 2025
 License        : BSD3
 Maintainer     : aleksi@atarv.dev
 -}
@@ -23,6 +23,7 @@ import qualified Data.Text                as T
 import qualified Data.Text.Lazy           as LT
 import           Data.Time
 import           Database
+import           GHC.Stack                (HasCallStack)
 import           HTMLRenderer             (errorSectionToHtml, sectionToHtml,
                                            sectionsToHtml)
 import           Listing                  (Listing (listingId))
@@ -43,12 +44,18 @@ filterOutSeenListings seenIds =
     filter (not . (`Set.member` Set.fromList seenIds) . listingId)
 
 -- | Scrape a single listing section
-scrapeSection :: Section -> IO (T.Text, Either SomeException [Listing])
+scrapeSection :: HasCallStack
+    => Section
+    -> IO (T.Text, Either SomeException [Listing])
 scrapeSection Section {..} =
     (sectionTitle, ) <$> scrapeListings (T.unpack sectionUrl)
 
 -- | Scrape given sections, generate a report out of them and send it
-scrapeAndReport :: Amazonka.Env -> AppConfig -> ScrapingOptions -> IO ()
+scrapeAndReport :: HasCallStack
+    => Amazonka.Env
+    -> AppConfig
+    -> ScrapingOptions
+    -> IO ()
 scrapeAndReport awsEnv AppConfig {..} opts@ScrapingOptions {..} = do
     when (null sections) (throw $ NoSections "No sections to scrape")
     scrapedSections <- mapConcurrently scrapeSection sections
@@ -74,10 +81,10 @@ scrapeAndReport awsEnv AppConfig {..} opts@ScrapingOptions {..} = do
     -- Remove seen listings (which are stored in a database) from the list.
     -- Listings are stored to database during this process.
     diffListingsWithSeen title listings = do
-        storedIds <- storeListings 
-            awsEnv 
-            dynamoDBTableName 
-            recipientEmail 
-            title 
+        storedIds <- storeListings
+            awsEnv
+            dynamoDBTableName
+            recipientEmail
+            title
             listings
         pure $ filterOutSeenListings storedIds listings

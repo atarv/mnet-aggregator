@@ -1,7 +1,7 @@
 {-|
 Module         : ListingScraper
 Description    : Web scraping listings.
-Copyright      : (c) Aleksi Tarvainen, 2020
+Copyright      : (c) Aleksi Tarvainen, 2025
 License        : BSD3
 Maintainer     : aleksi@atarv.dev
 -}

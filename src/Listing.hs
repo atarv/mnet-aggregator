@@ -1,7 +1,7 @@
 {-|
 Module         : Listing
 Description    : Defining listing's relevant content and transofmations.
-Copyright      : (c) Aleksi Tarvainen, 2020
+Copyright      : (c) Aleksi Tarvainen, 2025
 License        : BSD3
 Maintainer     : aleksi@atarv.dev
 -}

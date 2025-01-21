@@ -20,16 +20,15 @@ import           Data.List.Lens
 import           Data.Maybe
 import qualified Data.Text                as T
 import qualified Data.Text.Internal.Read  as T
+import           GHC.Stack                (HasCallStack)
 import           Listing
 
 type ListingId = T.Text
 
-getUsersSeenListings :: Amazonka.Env -> T.Text -> IO (Either T.Text [ListingId])
-getUsersSeenListings env userEmail = undefined
-
 -- | Store the set of listings user with given email address has seen.
 -- Returns identifiers of listings that already existed.
-storeListings :: Amazonka.Env
+storeListings :: HasCallStack
+    => Amazonka.Env
     -> T.Text -- ^ DynamoDB table name
     -> T.Text -- ^ User identifier (email)
     -> T.Text -- ^ Section title

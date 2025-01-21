@@ -4,3 +4,4 @@
 stan.html
 *.dhall
 build/
+scraping-options.json
