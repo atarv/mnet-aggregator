@@ -1,7 +1,7 @@
 {-|
 Module         : Configs
 Description    : Configuration definitions for the app.
-Copyright      : (c) Aleksi Tarvainen, 2020
+Copyright      : (c) Aleksi Tarvainen, 2025
 License        : BSD3
 Maintainer     : aleksi@atarv.dev
 -}
@@ -26,7 +26,6 @@ instance FromDhall MailConfig
 -- | This includes all the necessary configurations for app
 data AppConfig = AppConfig
     { mailConfig        :: !MailConfig
-    , serverPort        :: !Natural
     , dynamoDBTableName :: !Text
     } deriving (Generic, Show)
 

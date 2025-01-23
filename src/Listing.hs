@@ -5,6 +5,8 @@ Copyright      : (c) Aleksi Tarvainen, 2025
 License        : BSD3
 Maintainer     : aleksi@atarv.dev
 -}
+{-# LANGUAGE DeriveAnyClass    #-}
+{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE StrictData        #-}
@@ -13,9 +15,8 @@ module Listing (Listing(..), toModel, fromModel) where
 import           Amazonka.DynamoDB.Types     as DB
 import           Amazonka.Prelude            hiding (div)
 import           Configs
-import           Control.Exception
 import           Control.Lens
-import           Data.String
+import           Data.Aeson
 import qualified Data.Text                   as T
 import           Prelude                     hiding (div, span)
 import           Text.Blaze.Html
@@ -34,7 +35,8 @@ data Listing = Listing
     , location     :: !T.Text
     , county       :: !T.Text
     , price        :: !(Maybe Double)
-    } deriving (Show)
+    } 
+    deriving (Generic, FromJSON, ToJSON, Show)
 
 instance Eq Listing where
     (==) x y = listingId x == listingId y

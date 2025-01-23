@@ -7,7 +7,7 @@ Maintainer     : aleksi@atarv.dev
 -}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
-module Mailer (sendListingMail) where
+module Mailer (sendReportMail) where
 import qualified Amazonka
 import           Amazonka.Prelude
 import           Amazonka.SESV2
@@ -20,19 +20,20 @@ import qualified Data.Text.Lazy       as LT
 import qualified Data.Text.Lazy.IO    as LT
 import           GHC.Stack            (HasCallStack)
 import           Network.Mail.Mime    as M
+import           Report
 import           ScrapingOptions
 
 
--- | Send mail containing HTML
-sendListingMail :: HasCallStack
+-- | Send report with HTML content
+sendReportMail :: HasCallStack
     => Amazonka.Env
     -> MailConfig
-    -> ScrapingOptions
+    -> Report
     -> LT.Text
     -> IO ()
-sendListingMail awsEnv MailConfig{..} ScrapingOptions{..} html = do
+sendReportMail awsEnv MailConfig{..} report html = do
     rawMessage <- LB.toStrict <$> (M.renderMail' =<< M.simpleMail
-                (M.Address (Just recipientName) recipientEmail)
+                (M.Address (Just (reportRecipientName report)) (reportRecipientEmail report))
                 (M.Address (Just senderName) senderEmail)
                 "M.net-päivystäjän raportti" -- Subject
                 "Saatavilla vain HTML-muodossa" -- Plain text
@@ -44,7 +45,7 @@ sendListingMail awsEnv MailConfig{..} ScrapingOptions{..} html = do
 
     response <- Amazonka.runResourceT $ Amazonka.send awsEnv sendEmailRequest
     putStrLn $ "Sent email report to '"
-        <> T.unpack recipientEmail
+        <> T.unpack (reportRecipientEmail report)
         <> "', message id ("
         <> show (response ^. sendEmailResponse_messageId)
         <> "), status "

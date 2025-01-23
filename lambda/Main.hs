@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeApplications  #-}
 
 module Main where
 
@@ -11,6 +10,7 @@ import           Data.IORef
 import qualified Data.Text          as T
 import           GHC.IO.Encoding
 import           MnetAggregator
+import           Report
 import           ScrapingOptions
 import           System.Environment (getEnv)
 
@@ -23,14 +23,22 @@ main = do
         defaultDispatcherOptions
         appConfigEnv
         id
-        (addStandaloneLambdaHandler "handler" handler)
+        (addAPIGatewayHandler "handler" handler)
 
-handler :: ScrapingOptions -> Context AppConfig -> IO (Either String ())
+handler :: ApiGatewayRequest Report
+    -> Context AppConfig
+    -> IO (Either (ApiGatewayResponse String) (ApiGatewayResponse ()))
 handler request context = do
     appConfig <- readIORef (customContext context)
     awsEnv <- Amazonka.newEnv Amazonka.discover
-    (Right <$> scrapeAndReport awsEnv appConfig request)
-        `catch` (pure . Left . show @SomeException)
+    case apiGatewayRequestBody request of
+        Nothing -> pure $ Left $ mkApiGatewayResponse
+                400
+                [ ("Content-Type", "text/plain") ]
+                "Error: Body was empty"
+        Just report -> do
+            sendReport awsEnv appConfig report
+            pure $ Right $ mkApiGatewayResponse 200 [] ()
 
 appConfigEnv :: IO AppConfig
 appConfigEnv = do
@@ -42,7 +50,6 @@ appConfigEnv = do
             { senderEmail = mailSender
             , senderName = mailSenderName
             }
-        , serverPort = 80 -- Unused when running on lambda
         , dynamoDBTableName = ddbTableName
         }
   where

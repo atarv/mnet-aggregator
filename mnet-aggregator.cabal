@@ -29,6 +29,7 @@ library
       MnetAggregator
       ScrapingOptions
       Configs
+      Report
   other-modules:
       Paths_mnet_aggregator
       Listing
@@ -73,6 +74,9 @@ executable mnet-aggregator-exe
     , aeson
     , amazonka
     , bytestring
+    , http-client
+    , http-client-tls
+    , http-types
     , mnet-aggregator
     , optparse-applicative
     , text

@@ -10,7 +10,7 @@ Maintainer     : aleksi@atarv.dev
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections       #-}
-module MnetAggregator (scrapeAndReport) where
+module MnetAggregator (scrapeReport, sendReport) where
 
 import qualified Amazonka
 import           Configs
@@ -18,8 +18,10 @@ import           Control.Concurrent       ()
 import           Control.Concurrent.Async (mapConcurrently)
 import           Control.Exception
 import           Control.Monad
+import           Data.Bifunctor
 import qualified Data.Set                 as Set
 import qualified Data.Text                as T
+import qualified Data.Text.IO             as T
 import qualified Data.Text.Lazy           as LT
 import           Data.Time
 import           Database
@@ -28,7 +30,8 @@ import           HTMLRenderer             (errorSectionToHtml, sectionToHtml,
                                            sectionsToHtml)
 import           Listing                  (Listing (listingId))
 import           ListingScraper           (scrapeListings)
-import           Mailer                   (sendListingMail)
+import           Mailer                   (sendReportMail)
+import           Report
 import           ScrapingOptions
 
 newtype MnetAggregatorException = NoSections String deriving Show
@@ -45,30 +48,44 @@ filterOutSeenListings seenIds =
 
 -- | Scrape a single listing section
 scrapeSection :: HasCallStack
-    => Section
+    => SectionParams
     -> IO (T.Text, Either SomeException [Listing])
-scrapeSection Section {..} =
+scrapeSection SectionParams {..} =
     (sectionTitle, ) <$> scrapeListings (T.unpack sectionUrl)
 
 -- | Scrape given sections, generate a report out of them and send it
-scrapeAndReport :: HasCallStack
-    => Amazonka.Env
-    -> AppConfig
-    -> ScrapingOptions
-    -> IO ()
-scrapeAndReport awsEnv AppConfig {..} opts@ScrapingOptions {..} = do
+scrapeReport :: HasCallStack
+    => ScrapingOptions
+    -> IO Report
+scrapeReport opts@ScrapingOptions {..} = do
     when (null sections) (throw $ NoSections "No sections to scrape")
     scrapedSections <- mapConcurrently scrapeSection sections
-    sectionsHtml    <- forM scrapedSections $ \(sectionTitle, scrapeResult) ->
-        case scrapeResult of
+    let reportSections = fmap
+            (\(title, sects) -> ReportSection title (first (T.pack . show) sects))
+            scrapedSections
+    pure $ Report
+        { reportSections = reportSections
+        , reportRecipientName = recipientName
+        , reportRecipientEmail = recipientEmail
+        }
+
+sendReport :: HasCallStack
+    => Amazonka.Env
+    -> AppConfig
+    -> Report
+    -> IO ()
+sendReport aws config report = do
+    sectionsHtml    <- forM (Report.reportSections report) $ \sect ->
+        let sectionTitle = title sect
+        in case listings sect of
             Left err -> do
-                putStrLn $ "Failed to scrape section '"
-                    <> T.unpack sectionTitle
+                T.putStrLn $ "Failed to scrape section '"
+                    <> sectionTitle
                     <> "': "
-                    <> show err
+                    <> err
                 pure $ errorSectionToHtml
                     sectionTitle
-                    (T.pack $ displayException err)
+                    err
             Right listings -> do
                 newListings <- diffListingsWithSeen sectionTitle listings
                 pure $ sectionToHtml sectionTitle newListings
@@ -76,15 +93,15 @@ scrapeAndReport awsEnv AppConfig {..} opts@ScrapingOptions {..} = do
     time <- formatTime defaultTimeLocale "%-d.%-m.%Y %-R" <$> getZonedTime
     let mailTitle = "Raportti " <> time
         mailHtml  = sectionsToHtml mailTitle (concat sectionsHtml)
-    sendListingMail awsEnv mailConfig opts (LT.pack mailHtml)
+    sendReportMail aws (mailConfig config) report (LT.pack mailHtml)
   where
     -- Remove seen listings (which are stored in a database) from the list.
     -- Listings are stored to database during this process.
     diffListingsWithSeen title listings = do
         storedIds <- storeListings
-            awsEnv
-            dynamoDBTableName
-            recipientEmail
+            aws
+            (dynamoDBTableName config)
+            (reportRecipientEmail report)
             title
             listings
         pure $ filterOutSeenListings storedIds listings
