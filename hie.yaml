@@ -8,3 +8,5 @@ cradle:
       component: mnet-aggregator:lib
     - path: "./test"
       component: mnet-aggregator:test:mnet-aggregator-test
+    - path: "./preview"
+      component: mnet-aggregator:exe:preview-exe

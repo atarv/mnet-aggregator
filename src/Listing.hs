@@ -35,33 +35,33 @@ data Listing = Listing
     , location     :: !T.Text
     , county       :: !T.Text
     , price        :: !(Maybe Double)
-    } 
+    }
     deriving (Generic, FromJSON, ToJSON, Show)
 
 instance Eq Listing where
     (==) x y = listingId x == listingId y
 
 instance ToMarkup Listing where
-    toMarkup Listing {..} = div ! class_ "announcement" $ do
-        h3 $ a ! href (toValue $ T.pack baseUrl <> listingId) $ text
-            listingTitle
-        div $ do
-            H.span $ do
-                text "Ilmoittaja: "
-                a ! href (toValue $ T.pack baseUrl <> authorId) $ text author
-            mapM_
-                (\thumbnail ->
-                    img ! src (toValue $ T.pack baseUrl <> thumbnail)
-                        ! alt
-                        "announcement image"
-                )
-                thumbnails
-            p $ preEscapedText description
-            p $ do
-                text dates
-                H.br
-                text $ "Paikkakunta: " <> location <> " (" <> county <> ")"
-        hr
+    toMarkup Listing {..} =
+        div ! class_ "announcement" $ do
+            h3 $ a ! href (toValue $ T.pack baseUrl <> listingId) $ text listingTitle
+            H.table ! class_ "announcement-table" $
+                H.tr $ do
+                    H.td ! class_ "announcement-body" $ do
+                        H.span ! class_ "announcement-author" $ do
+                            text "Ilmoittaja: "
+                            a ! href (toValue $ T.pack baseUrl <> authorId) $ text author
+                        p $ preEscapedText description
+                        p ! class_ "announcement-meta" $ do
+                            text dates
+                            H.br
+                            text $ "Paikkakunta: " <> location <> " (" <> county <> ")"
+                    case thumbnails of
+                        []    -> mempty
+                        (t:_) -> -- Only the first thumbnail for simplicity
+                            H.td ! class_ "announcement-image" $
+                                img ! src (toValue $ T.pack baseUrl <> t)
+                                    ! alt "announcement image"
 
 toModel :: T.Text -> T.Text -> Listing -> HashMap Text DB.AttributeValue
 toModel userId sectionTitle Listing{..} = fromList

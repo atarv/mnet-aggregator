@@ -17,7 +17,7 @@ import           Text.Blaze.Html5                as H
 import           Text.Blaze.Html5.Attributes     as A
 
 listingsSection :: T.Text -> Html
-listingsSection sectionTitle = H.div ! A.class_ "section" $ do
+listingsSection sectionTitle = H.div ! class_ "section" $
     H.h2 $ text sectionTitle
 
 sectionToHtml :: T.Text -> [Listing] -> String
@@ -26,16 +26,18 @@ sectionToHtml sectionTitle [] = renderHtml $ do
     H.p $ H.em "Ei uusia ilmoituksia"
 sectionToHtml sectionTitle listings = renderHtml $ do
     listingsSection sectionTitle
-    H.div ! A.class_ "announcement-list" $ forM_ listings toHtml
+    forM_ listings toHtml
 
 errorSectionToHtml :: T.Text -> T.Text -> String
 errorSectionToHtml sectionTitle errorMessage = renderHtml $ do
     listingsSection sectionTitle
-    H.p $ H.em ! A.class_ "section-error" $ "Virhe: " <> text errorMessage
+    H.p $ H.em ! class_ "section-error" $ "Virhe: " <> text errorMessage
 
 sectionsToHtml :: String -> String -> String
 sectionsToHtml topTitle sectionsHtml = renderHtml $ docTypeHtml $ do
     H.head $ do
+        H.meta ! httpEquiv "Content-Type" ! content "text/html; charset=utf-8"
+        H.meta ! name "viewport" ! content "width=device-width, initial-scale=1"
         H.title "M.net-päivystäjä - uusia ilmoituksia"
         H.style $ lazyText styleSheet
     body $ do

@@ -15,12 +15,18 @@ import           Options.Applicative
 import           ScrapingOptions         (ScrapingOptions (apiKey, postReportUrl))
 import           System.Exit             (exitFailure)
 
-data CliOptions = CliOptions { scrapingOptionsPath :: FilePath }
+data CliOptions = CliOptions
+    { scrapingOptionsPath :: FilePath
+    , dryRun              :: Bool
+    }
 
 options :: Parser CliOptions
 options = CliOptions
     <$> strArgument (metavar "SCRAPING_OPTIONS_PATH"
         <> help "Path to scraping options (.json)")
+    <*> switch (long "dry-run"
+        <> short 'd'
+        <> help "Output report JSON to stdout without posting")
 
 main :: HasCallStack => IO ()
 main = do
@@ -33,18 +39,21 @@ main = do
     scrapingOpts <- throwDecode =<< BSL.readFile (scrapingOptionsPath opts)
     reportJson <- encode <$> scrapeReport scrapingOpts
 
-    -- POST report to Lambda for further processing
-    initReq <- parseRequest (postReportUrl scrapingOpts)
-    let request = initReq
-            { method = "POST"
-            , secure = True
-            , requestHeaders =
-                [ ("Content-Type", "application/json")
-                , ("x-api-key", T.encodeUtf8 $ apiKey scrapingOpts)
-                ]
-            , requestBody = RequestBodyLBS reportJson
-            }
-    response <- httpLbs request =<< newTlsManager
-    let status =  responseStatus response
-    BSL.putStr $ responseBody response
-    unless (statusIsSuccessful status) exitFailure
+    if dryRun opts
+        then BSL.putStr reportJson
+        else do
+            -- POST report to Lambda for further processing
+            initReq <- parseRequest (postReportUrl scrapingOpts)
+            let request = initReq
+                    { method = "POST"
+                    , secure = True
+                    , requestHeaders =
+                        [ ("Content-Type", "application/json")
+                        , ("x-api-key", T.encodeUtf8 $ apiKey scrapingOpts)
+                        ]
+                    , requestBody = RequestBodyLBS reportJson
+                    }
+            response <- httpLbs request =<< newTlsManager
+            let status = responseStatus response
+            BSL.putStr $ responseBody response
+            unless (statusIsSuccessful status) exitFailure

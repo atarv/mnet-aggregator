@@ -1,0 +1,68 @@
+{
+  "reportRecipientName": "Testi Käyttäjä",
+  "reportRecipientEmail": "testi@example.com",
+  "reportSections": [
+    {
+      "title": "Kitarat",
+      "listings": {
+        "Right": [
+          {
+            "listingId": "/ilmoitukset/ilmoitus.html?id=1001",
+            "author": "JukkaK",
+            "authorId": "/kayttajat/profiili.html?id=42",
+            "dates": "Ilmoitettu: 12.3.2026",
+            "description": "Erittäin hyväkuntoinen Fender Stratocaster 1962 Reissue. Alkuperäiset virityskoneistot, uusi sähköistys. Mukana alkuperäinen laukku. Hinta 1800€, ei vaihtoihin.",
+            "thumbnails": ["/kuvat/thumb/strat.jpg"],
+            "listingTitle": "Fender Stratocaster 1962 Reissue - Sunburst",
+            "location": "Helsinki",
+            "county": "Uusimaa",
+            "price": 1800.0
+          },
+          {
+            "listingId": "/ilmoitukset/ilmoitus.html?id=1003",
+            "author": "MikkoM",
+            "authorId": "/kayttajat/profiili.html?id=77",
+            "dates": "Ilmoitettu: 8.3.2026",
+            "description": "Lähes uusi Gibson Les Paul Standard. Ostettu 2019, soitettu vähän. Mukana gigbag. Hinta 2100€.",
+            "thumbnails": ["/kuvat/thumb/lp.jpg"],
+            "listingTitle": "Gibson Les Paul Standard 2019 - Honey Burst",
+            "location": "Turku",
+            "county": "Varsinais-Suomi",
+            "price": 2100.0
+          }
+        ]
+      }
+    },
+    {
+      "title": "Vahvistimet",
+      "listings": {
+        "Right": [
+          {
+            "listingId": "/ilmoitukset/ilmoitus.html?id=1002",
+            "author": "RockiPekka",
+            "authorId": "/kayttajat/profiili.html?id=99",
+            "dates": "Ilmoitettu: 10.3.2026",
+            "description": "Klassinen Marshall JCM800 vuodelta 1985. Täysin toimintakunnossa, huollettu 2024. Uudet putket. Hinta 1200€.",
+            "thumbnails": [],
+            "listingTitle": "Marshall JCM800 2203 - 100W",
+            "location": "Tampere",
+            "county": "Pirkanmaa",
+            "price": 1200.0
+          }
+        ]
+      }
+    },
+    {
+      "title": "Koskettimet",
+      "listings": {
+        "Right": []
+      }
+    },
+    {
+      "title": "Basso",
+      "listings": {
+        "Left": "Yhteysvirhe palvelimeen"
+      }
+    }
+  ]
+}
