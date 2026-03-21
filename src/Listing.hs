@@ -19,6 +19,7 @@ import           Control.Lens
 import           Data.Aeson
 import qualified Data.Text                   as T
 import           Prelude                     hiding (div, span)
+import           StyleGen
 import           Text.Blaze.Html
 import           Text.Blaze.Html5            as H
 import           Text.Blaze.Html5.Attributes as A
@@ -43,25 +44,30 @@ instance Eq Listing where
 
 instance ToMarkup Listing where
     toMarkup Listing {..} =
-        div ! class_ "announcement" $ do
-            h3 $ a ! href (toValue $ T.pack baseUrl <> listingId) $ text listingTitle
-            H.table ! class_ "announcement-table" $
-                H.tr $ do
-                    H.td ! class_ "announcement-body" $ do
-                        H.span ! class_ "announcement-author" $ do
-                            text "Ilmoittaja: "
-                            a ! href (toValue $ T.pack baseUrl <> authorId) $ text author
-                        p $ preEscapedText description
-                        p ! class_ "announcement-meta" $ do
-                            text dates
-                            H.br
-                            text $ "Paikkakunta: " <> location <> " (" <> county <> ")"
-                    case thumbnails of
-                        []    -> mempty
-                        (t:_) -> -- Only the first thumbnail for simplicity
-                            H.td ! class_ "announcement-image" $
-                                img ! src (toValue $ T.pack baseUrl <> t)
-                                    ! alt "announcement image"
+        div ! inlineStyleAttr announcementStyle $ do
+            h3 ! inlineStyleAttr h3Style $
+                a ! href (toValue $ T.pack baseUrl <> listingId)
+                  ! inlineStyleAttr h3LinkStyle
+                  $ text listingTitle
+            case thumbnails of
+                []    -> mempty
+                (t:_) ->
+                    img ! src (toValue $ T.pack baseUrl <> t)
+                        ! alt "announcement image"
+                        ! customAttribute "align" "right"
+                        ! inlineStyleAttr announcementImageStyle
+            H.span ! inlineStyleAttr announcementAuthorStyle $ do
+                text "Ilmoittaja: "
+                a ! href (toValue $ T.pack baseUrl <> authorId)
+                  ! inlineStyleAttr announcementAuthorLinkStyle
+                  $ text author
+            p ! inlineStyleAttr announcementBodyPStyle $
+                preEscapedText description
+            p ! inlineStyleAttr announcementMetaStyle $ do
+                text dates
+                H.br
+                text $ "Paikkakunta: " <> location
+                    <> " (" <> county <> ")"
 
 toModel :: T.Text -> T.Text -> Listing -> HashMap Text DB.AttributeValue
 toModel userId sectionTitle Listing{..} = fromList

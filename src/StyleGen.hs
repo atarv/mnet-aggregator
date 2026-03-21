@@ -1,20 +1,40 @@
 {-|
 Module         : StyleGen
-Description    : Generates the CSS-stylesheet for the report
+Description    : Generates inline CSS styles for Gmail-compatible HTML emails
 Copyright      : (c) Aleksi Tarvainen, 2020
 License        : BSD3
 Maintainer     : aleksi@atarv.dev
 -}
 {-# LANGUAGE OverloadedStrings #-}
-module StyleGen (styleSheet) where
+module StyleGen
+    ( inlineStyleAttr
+    , bodyStyle
+    , h1Style
+    , h2Style
+    , h3Style
+    , h3LinkStyle
+    , sectionStyle
+    , sectionErrorStyle
+    , announcementStyle
+    , announcementBodyPStyle
+    , announcementAuthorStyle
+    , announcementAuthorLinkStyle
+    , announcementMetaStyle
+    , announcementImageStyle
+    , noListingsStyle
+    ) where
 
 import           Clay
-import           Data.String    (IsString)
-import qualified Data.Text.Lazy as LT
-import           Prelude        hiding (div, span, (**))
+import           Clay.Render                 (htmlInline)
+import           Data.String                 (IsString)
+import qualified Data.Text.Lazy              as LT
+import           Prelude                     hiding (div, span, (**))
+import           Text.Blaze.Html5            (Attribute, lazyTextValue)
+import qualified Text.Blaze.Html5.Attributes as A
 
-styleSheet :: LT.Text
-styleSheet = render mnetStyle
+-- | Render a Clay Css block to a Blaze inline style attribute
+inlineStyleAttr :: Css -> Attribute
+inlineStyleAttr = A.style . lazyTextValue . renderWith htmlInline []
 
 fontStack :: IsString s => [s]
 fontStack = ["Open Sans", "Verdana", "Geneva", "Arial", "Helvetica"]
@@ -44,72 +64,92 @@ colorBackground = grayish 245
 colorSurface :: Color
 colorSurface = white
 
-mnetStyle :: Css
-mnetStyle = do
-    body ? do
-        maxWidth (px 680)
-        margin (px 0) auto (px 0) auto
-        fontFamily fontStack [sansSerif]
-        fontSize (px 14)
-        color colorText
-        backgroundColor colorBackground
-    h1 ? do
-        fontFamily fontStack [sansSerif]
-        background colorPrimary
-        color white
-        fontSize (px 26)
-        padding (px 10) (px 16) (px 10) (px 16)
-        marginBottom (px 0)
-    h2 ? do
-        fontFamily fontStack [sansSerif]
-        color colorPrimary
-        borderBottom (px 1) dotted colorPrimary
-        paddingBottom (px 4)
-        fontSize (px 18)
-    h3 ? do
-        fontFamily fontStack [sansSerif]
-        color colorPrimaryDark
-        margin (px 0) (px 0) (px 8) (px 0)
-        fontSize (px 16)
-        borderBottom (px 1) dotted colorPrimaryDark
-        paddingBottom (px 4)
-    h3 ** a ? do
-        color colorPrimary
-        textDecoration none
-        cursor pointer
-    div # byClass "section" ? do
-        padding (px 0) (px 8) (px 0) (px 8)
-    "em" # byClass "section-error" ? do
-        color colorError
-        fontStyle italic
-    div # byClass "announcement" ? do
-        backgroundColor colorSurface
-        border (px 1) solid colorBorder
-        padding (px 14) (px 16) (px 14) (px 16)
-        marginBottom (px 12)
-    table # byClass "announcement-table" ? do
-        width (pct 100)
-        borderCollapse collapse
-    td # byClass "announcement-body" ? do
-        verticalAlign vAlignTop
-    (td # byClass "announcement-body") ** p ? do
-        margin (px 8) (px 0) (px 8) (px 0)
-        lineHeight (unitless 1.5)
-    span # byClass "announcement-author" ? do
-        fontSize (px 12)
-        color colorMuted
-    (span # byClass "announcement-author") ** a ? do
-        color colorPrimary
-    (p # byClass "announcement-meta") ? do
-        fontSize (px 12)
-        color colorMuted
-        margin (px 4) (px 0) (px 4) (px 0)
-    td # byClass "announcement-image" ? do
-        width (pct 38)
-        verticalAlign vAlignTop
-        paddingLeft (px 12)
-    (td # byClass "announcement-image") ** img ? do
-        maxWidth (pct 100)
-        border (px 1) solid colorBorder
-    img ? do
-        maxWidth (pct 100)
+-- Individual style blocks for inline use
+
+bodyStyle :: Css
+bodyStyle = do
+    maxWidth (px 680)
+    margin (px 0) auto (px 0) auto
+    fontFamily fontStack [sansSerif]
+    fontSize (px 14)
+    color colorText
+    backgroundColor colorBackground
+
+h1Style :: Css
+h1Style = do
+    fontFamily fontStack [sansSerif]
+    background colorPrimary
+    color white
+    fontSize (px 26)
+    padding (px 10) (px 16) (px 10) (px 16)
+    marginBottom (px 0)
+
+h2Style :: Css
+h2Style = do
+    fontFamily fontStack [sansSerif]
+    color colorPrimary
+    borderBottom (px 1) dotted colorPrimary
+    paddingBottom (px 4)
+    fontSize (px 18)
+
+h3Style :: Css
+h3Style = do
+    fontFamily fontStack [sansSerif]
+    color colorPrimaryDark
+    margin (px 0) (px 0) (px 8) (px 0)
+    fontSize (px 16)
+    borderBottom (px 1) dotted colorPrimaryDark
+    paddingBottom (px 4)
+
+h3LinkStyle :: Css
+h3LinkStyle = do
+    color colorPrimary
+    textDecoration none
+
+sectionStyle :: Css
+sectionStyle =
+    padding (px 0) (px 8) (px 0) (px 8)
+
+sectionErrorStyle :: Css
+sectionErrorStyle = do
+    color colorError
+    fontStyle italic
+
+announcementStyle :: Css
+announcementStyle = do
+    backgroundColor colorSurface
+    border (px 1) solid colorBorder
+    padding (px 14) (px 16) (px 14) (px 16)
+    marginBottom (px 12)
+    overflow hidden
+
+announcementBodyPStyle :: Css
+announcementBodyPStyle = do
+    margin (px 8) (px 0) (px 8) (px 0)
+    lineHeight (unitless 1.5)
+
+announcementAuthorStyle :: Css
+announcementAuthorStyle = do
+    fontSize (px 12)
+    color colorMuted
+
+announcementAuthorLinkStyle :: Css
+announcementAuthorLinkStyle =
+    color colorPrimary
+
+announcementMetaStyle :: Css
+announcementMetaStyle = do
+    fontSize (px 12)
+    color colorMuted
+    margin (px 4) (px 0) (px 4) (px 0)
+
+announcementImageStyle :: Css
+announcementImageStyle = do
+    maxWidth (pct 38)
+    marginLeft (px 12)
+    marginBottom (px 8)
+    border (px 1) solid colorBorder
+
+noListingsStyle :: Css
+noListingsStyle =
+    fontStyle italic
